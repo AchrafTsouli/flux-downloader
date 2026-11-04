@@ -200,7 +200,8 @@ public sealed class Aria2Backend(string executable) : ITorrentBackend
         var args = Common();
         args.AddRange(["--enable-rpc=true", "--rpc-listen-all=false", "--rpc-listen-port=" + port, "--rpc-secret=" + secret, "--gid=" + gid, "--dir=" + run.Directory,
             "--continue=true", "--check-integrity=false", "--allow-overwrite=false", "--auto-save-interval=10", "--seed-time=" + run.SeedMinutes, "--bt-save-metadata=false"]);
-        if (run.Files.Count > 0) args.Add("--select-file=" + string.Join(',', run.Files));
+        // Pieces span file boundaries, so edges of unchosen files arrive too; aria2 deletes them on completion.
+        if (run.Files.Count > 0) args.AddRange(["--select-file=" + string.Join(',', run.Files), "--bt-remove-unselected-file=true"]);
         if (run.SpeedLimit > 0) args.Add("--max-overall-download-limit=" + run.SpeedLimit);
         args.Add(run.MetadataFile);
         using var process = Process.Start(Start(executable, args)) ?? throw new IOException("The torrent engine could not start.");

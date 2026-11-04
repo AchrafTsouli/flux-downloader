@@ -6,6 +6,24 @@ string root = Path.Combine(Environment.CurrentDirectory,".test-tmp","media-tests
 Directory.CreateDirectory(root);
 string tools = Path.GetFullPath(args.FirstOrDefault(value=>value.StartsWith("--tools="))?[8..] ?? Path.Combine(Environment.CurrentDirectory,"video-tools"));
 const string page = "https://www.youtube.com/watch?v=jNQXAC9IVRw";
+if (args.FirstOrDefault(value=>value.StartsWith("--torrent=")) is string torrentArg)
+{
+    // Real torrent check through Flux's own code: file list from peers, chosen files only, progress, completion.
+    var torrents=new TorrentTools(tools);
+    using var torrentTimeout=new CancellationTokenSource(TimeSpan.FromMinutes(8));
+    var info=await torrents.LoadAsync(torrentArg[10..],torrentTimeout.Token);
+    Console.WriteLine($"TORRENT {info.Name} {info.InfoHash} {info.Files.Count} files {info.TotalBytes} bytes");
+    foreach(var f in info.Files.Take(12))Console.WriteLine($"  {f.Index}: {f.Path} ({f.Length})");
+    var pick=args.FirstOrDefault(value=>value.StartsWith("--files="))?[8..].Split(',').Select(int.Parse).ToList()??[];
+    var selection=new TorrentSelection{InfoHash=info.InfoHash,Name=info.Name,MetadataFile=TorrentTools.MetadataPath(info.InfoHash),Files=pick,SelectedBytes=pick.Count==0?info.TotalBytes:info.Files.Where(f=>pick.Contains(f.Index)).Sum(f=>f.Length)};
+    var job=new DownloadJob{Url=Torrents.Magnet(info.InfoHash,info.Name),Destination=Path.Combine(root,"torrent",info.Name),Torrent=selection};
+    var last=DateTime.MinValue;
+    await torrents.DownloadAsync(job,new InlineProgress(p=>{if(DateTime.Now-last>TimeSpan.FromSeconds(3)){last=DateTime.Now;Console.WriteLine($"  {p.Bytes}/{p.Total} bytes, {p.BytesPerSecond/1024:0} KB/s, {p.Connections} peers");}}),torrentTimeout.Token);
+    Console.WriteLine($"RESULT {job.State} {job.Error} -> {job.Destination}");
+    if(Directory.Exists(job.Destination))foreach(var f in Directory.EnumerateFiles(job.Destination,"*",SearchOption.AllDirectories))Console.WriteLine($"  file {Path.GetRelativePath(job.Destination,f)} {new FileInfo(f).Length}");
+    else if(File.Exists(job.Destination))Console.WriteLine($"  file {new FileInfo(job.Destination).Length}");
+    return;
+}
 if (args.FirstOrDefault(value=>value.StartsWith("--update-ytdlp=")) is string updateArg)
 {
     // Real updater check into a scratch folder: latest release, checksum, execution and version.
