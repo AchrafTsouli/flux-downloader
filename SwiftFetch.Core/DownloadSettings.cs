@@ -53,6 +53,7 @@ public sealed class DownloadSettings
     public const string ProjectPage = "https://github.com/AchrafTsouli/flux-downloader";
     public const string DefaultUpdateFeed = ProjectPage + "/releases/latest/download/version.json";
     public string UpdateFeedUrl { get; set; } = "";
+    public Dictionary<string, int> HostConnectionLimits { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     [System.Text.Json.Serialization.JsonIgnore] public string EffectiveUpdateFeed => UpdateFeedUrl.Length > 0 ? UpdateFeedUrl : DefaultUpdateFeed;
     [System.Text.Json.Serialization.JsonIgnore] public string EffectiveHomePage => HomePageUrl.Length > 0 ? HomePageUrl : ProjectPage;
     public bool AutoCheckUpdates { get; set; } = true;
@@ -157,4 +158,23 @@ public sealed class EngineOptions
     public bool PreserveServerDate { get; set; }
     public string VirusScanner { get; set; } = "";
     public string VirusScannerArguments { get; set; } = "{file}";
+    /// <summary>Connections each site accepted after refusing more (host -> count). Subdomains inherit a parent's limit.</summary>
+    public System.Collections.Concurrent.ConcurrentDictionary<string, int> HostConnectionLimits { get; set; } = new(StringComparer.OrdinalIgnoreCase) { ["gofile.io"] = 2 };
+    /// <summary>Raised when a site's limit is learned or lowered, so the app can save it.</summary>
+    public Action<string, int>? HostLimitLearned { get; set; }
+    public int? LimitFor(Uri uri)
+    {
+        string host = uri.IdnHost.ToLowerInvariant();
+        for (string? candidate = host; candidate != null; candidate = candidate.IndexOf('.') is int dot and > 0 && candidate.IndexOf('.', dot + 1) > 0 ? candidate[(dot + 1)..] : null)
+            if (HostConnectionLimits.TryGetValue(candidate, out int limit)) return Math.Clamp(limit, 1, MaximumConnections);
+        return null;
+    }
+    public void Learn(Uri uri, int connections)
+    {
+        string host = uri.IdnHost.ToLowerInvariant();
+        connections = Math.Clamp(connections, 1, MaximumConnections);
+        if (LimitFor(uri) is int known && known <= connections) return;
+        HostConnectionLimits[host] = connections;
+        HostLimitLearned?.Invoke(host, connections);
+    }
 }

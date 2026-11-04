@@ -218,10 +218,11 @@ public sealed class SqliteDownloadStateStore(string databasePath, string? legacy
     }
     private static void ValidateJob(DownloadJob job)
     {
-        if (!Guid.TryParseExact(job.Id, "N", out _) || !Path.IsPathFullyQualified(job.Destination) || !Uri.TryCreate(job.Url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) throw new InvalidDataException("Invalid stored download.");
+        if (!Guid.TryParseExact(job.Id, "N", out _) || !Path.IsPathFullyQualified(job.Destination) || !Uri.TryCreate(job.Url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https") && !(uri.Scheme == "magnet" && job.Torrent != null)) throw new InvalidDataException("Invalid stored download.");
         if (job.TemporaryDirectory is { Length: > 0 } && !Path.IsPathFullyQualified(job.TemporaryDirectory)) throw new InvalidDataException("Invalid stored parts folder.");
         job.Session?.Validate(job.Url);
         job.Video?.Validate(job.Url);
+        job.Torrent?.Validate(job.Url);
         if (job.Video != null && job.MediaWorkDirectory != null) VideoTools.WorkDirectory(job);
     }
     private static void ValidatePending(List<PendingDownload> pending)

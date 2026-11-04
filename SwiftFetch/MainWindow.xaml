@@ -159,6 +159,8 @@
       <Separator/><MenuItem Header="Exit" Click="Exit_Click"/>
      </MenuItem>
      <MenuItem Header="_File" SubmenuOpened="FileMenu_Opened">
+      <MenuItem Header="Open torrent file…" Click="OpenTorrentFile_Click"/>
+      <Separator/>
       <MenuItem Header="Stop download" Tag="pause" Click="Pause_Click"/>
       <MenuItem Header="Remove" Tag="remove" InputGestureText="Del" Click="Remove_Click"/>
       <MenuItem Header="Download now / Resume" Tag="resume" Click="Resume_Click"/>

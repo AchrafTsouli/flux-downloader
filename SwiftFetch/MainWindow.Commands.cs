@@ -39,6 +39,8 @@ public partial class MainWindow
         engine.Options.VirusScanner = settings.VirusScanner;
         engine.Options.VirusScannerArguments = settings.VirusScannerArguments;
         engine.Options.GlobalLimiter.BytesPerSecond = settings.GlobalSpeedLimitBytes;
+        foreach (var (host, limit) in settings.HostConnectionLimits) engine.Options.HostConnectionLimits[host] = limit;
+        engine.Options.HostLimitLearned = (host, limit) => Dispatcher.BeginInvoke(() => { settings.HostConnectionLimits[host] = limit; SaveHistory(); });
         if (settings.GlobalSpeedLimitBytes > 0) settings.SavedGlobalSpeedLimitBytes = settings.GlobalSpeedLimitBytes;
         engine.Options.Proxy = settings.ProxyAddress.Length == 0 ? null : new WebProxy(settings.ProxyAddress) { Credentials = settings.ProxyUsername.Length == 0 ? null : new NetworkCredential(settings.ProxyUsername, settings.ProxyPassword) };
     }
@@ -150,7 +152,8 @@ public partial class MainWindow
     private void Redownload_Click(object sender, RoutedEventArgs e)
     {
         foreach (var row in SelectedRows().Where(row => !row.CanPause))
-            if (row.Job.Video != null) AcceptBrowserRequest(new("download",row.Job.Url,row.FileName,Guid.NewGuid().ToString(),row.Job.Session,row.Job.Video));
+            if (row.Job.Torrent != null) _ = OpenTorrentAsync(row.Job.Url);
+            else if (row.Job.Video != null) AcceptBrowserRequest(new("download",row.Job.Url,row.FileName,Guid.NewGuid().ToString(),row.Job.Session,row.Job.Video));
             else ConfirmUrl(new Uri(row.Job.Url), row.Job.Session, allowVideo: false);
     }
     private void FindNext_Click(object sender, RoutedEventArgs e)

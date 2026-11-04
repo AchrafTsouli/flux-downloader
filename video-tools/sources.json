@@ -1,50 +1,34 @@
 {
-  "quickjs": {
-    "version": "0.17.0",
-    "sha256": "2aeabf0092c3262d6b2609824418f7dd7ed1f1df939f73b2b15645230cac0d77",
-    "url": "https://github.com/quickjs-ng/quickjs/releases/download/v0.17.0/qjs-windows-x86_64.exe"
-  },
-  "ffmpeg": {
-    "version": "8.1.2",
-    "url": "https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz",
-    "sourceSha256": "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c",
-    "configurationSha256": "275E849EC1702726265B82DC95695113E3A1D08EE7F4CBA4F86794F543DE0D27"
-  },
-  "ytDlp": {
-    "version": "2026.08.19",
-    "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a",
-    "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe"
-  },
   "files": [
     {
       "name": "avcodec-62.dll",
-      "bytes": 2187776,
-      "sha256": "f988a2247b97ea08419cc97f7d80e12c367c93a42f2efa29da443e751ecd639c"
+      "bytes": 3257344,
+      "sha256": "4c136f8f1b7bc6c25e5adb8284eb4b79b21538cb715d90e6273d53fdc1e36c1d"
     },
     {
       "name": "avfilter-11.dll",
-      "bytes": 154112,
-      "sha256": "c63113649b9bebbf08b14ef44a7f59074cf1dd7d2b1950696989479cbd5b552f"
+      "bytes": 188928,
+      "sha256": "928f527a037facc67f1bb7522724b0d7895e548a5c35e8eba7a5f65e2802af9e"
     },
     {
       "name": "avformat-62.dll",
-      "bytes": 886272,
-      "sha256": "869134686ed67d2d390210a598e14e556188f097735ed2603926d5918cb6fd7f"
+      "bytes": 886784,
+      "sha256": "866456a36d949085ba005deb5d9ad643d9e8900774bae56f6ec263338833fba3"
     },
     {
       "name": "avutil-60.dll",
-      "bytes": 518144,
-      "sha256": "946970e54f1ea60e9e38ad66f6df092176eeab71a7a18c022935e2ddbaea1c2d"
+      "bytes": 533504,
+      "sha256": "bf616ad081634a9dafe814f52aec470b57e54ef685db2c40c0de361663d84b92"
     },
     {
       "name": "ffmpeg.exe",
-      "bytes": 389120,
-      "sha256": "a5f670d71be8112a23e209b62a63c6931f8730d1080e1f45fcd4ee850a45b939"
+      "bytes": 390656,
+      "sha256": "9385314aa72a4a98387adc33ff9abb70952250451e9fb57a6c3cee37eccf925b"
     },
     {
       "name": "ffprobe.exe",
-      "bytes": 172544,
-      "sha256": "b8097ddaa36320c42aa4f556a51d43e4b695a97573ebcaaafbc990c07a2783af"
+      "bytes": 175104,
+      "sha256": "fdedc7570c7baa519fa98468ddfd0e344a16e2f500f2d25a2b473df4a58a9ecb"
     },
     {
       "name": "qjs.exe",
@@ -52,9 +36,46 @@
       "sha256": "2aeabf0092c3262d6b2609824418f7dd7ed1f1df939f73b2b15645230cac0d77"
     },
     {
+      "name": "swresample-6.dll",
+      "bytes": 71680,
+      "sha256": "3250cd5f3ed5f3e01566728cd3cdac8bfd4c62837a376d8240edf0fef94a03ca"
+    },
+    {
+      "name": "swscale-9.dll",
+      "bytes": 626176,
+      "sha256": "0dd1db36faf17cd13703210db7bb7e76444c07e328ada0a52b5c667b7297ea1e"
+    },
+    {
       "name": "yt-dlp.exe",
       "bytes": 17840399,
       "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a"
+    },
+    {
+      "name": "aria2c.exe",
+      "bytes": 5649408,
+      "sha256": "be2099c214f63a3cb4954b09a0becd6e2e34660b886d4c898d260febfe9d70c2"
     }
-  ]
+  ],
+  "ytDlp": {
+    "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a",
+    "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe",
+    "version": "2026.08.19"
+  },
+  "quickjs": {
+    "sha256": "2aeabf0092c3262d6b2609824418f7dd7ed1f1df939f73b2b15645230cac0d77",
+    "url": "https://github.com/quickjs-ng/quickjs/releases/download/v0.17.0/qjs-windows-x86_64.exe",
+    "version": "0.17.0"
+  },
+  "ffmpeg": {
+    "url": "https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz",
+    "sourceSha256": "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c",
+    "version": "8.1.2",
+    "configurationSha256": "B1C5B03B3D4B6648ED6E30802EE6F255729A4E0CE4396B55FDB555FE7939B590"
+  },
+  "aria2": {
+    "version": "1.37.0",
+    "sha256": "67d015301eef0b612191212d564c5bb0a14b5b9c4796b76454276a4d28d9b288",
+    "url": "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip",
+    "license": "GPL-2.0-or-later (separate program, run as a child process)"
+  }
 }

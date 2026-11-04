@@ -1,7 +1,7 @@
 FFmpeg 8.1.2, LGPL-2.1-or-later, shared libraries; no GPL/nonfree components.
 Complete corresponding source: https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz
 Source SHA256: 464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c
-Build: scripts/Build-CompactFFmpeg.sh (SHA256: 275E849EC1702726265B82DC95695113E3A1D08EE7F4CBA4F86794F543DE0D27).
+Build: scripts/Build-CompactFFmpeg.sh (SHA256: B1C5B03B3D4B6648ED6E30802EE6F255729A4E0CE4396B55FDB555FE7939B590).
 Local source fix: mov_read_chnl returns ff_mov_read_chnl's status rather than an
 uninitialized variable; the one-line patch is applied by the build script.
 The shipped DLLs can be replaced/relinked with an ABI-compatible FFmpeg 8 build.

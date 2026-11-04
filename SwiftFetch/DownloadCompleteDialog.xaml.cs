@@ -24,6 +24,7 @@ public partial class DownloadCompleteDialog : Window
         AddressBox.ToolTip = job.Url; SavedAsBox.ToolTip = job.Destination;
         SavedAsBox.CaretIndex = SavedAsBox.Text.Length;
         Loaded += (_,_) => SavedAsBox.ScrollToHorizontalOffset(double.MaxValue);
+        ShowFileIcon();
 
         long bytes = job.TotalBytes ?? (File.Exists(job.Destination) ? new FileInfo(job.Destination).Length : 0);
         DownloadedSizeBlock.Text = $"Downloaded {FormatSize(bytes)} ({bytes:N0} Bytes)";
@@ -113,5 +114,30 @@ public partial class DownloadCompleteDialog : Window
         int index = 0;
         while (bytes >= 1024 && index < units.Length - 1) { bytes /= 1024; index++; }
         return $"{bytes:0.##} {units[index]}";
+    }
+
+    private Point? dragStart;
+    private void ShowFileIcon()
+    {
+        try
+        {
+            if (!System.IO.File.Exists(job.Destination)) return;
+            using var icon = System.Drawing.Icon.ExtractAssociatedIcon(job.Destination);
+            if (icon == null) return;
+            FileIconImage.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+            FileIconImage.Visibility = Visibility.Visible; FolderArt.Visibility = Visibility.Collapsed;
+        }
+        catch (Exception error) when (error is ArgumentException or System.IO.IOException or System.ComponentModel.Win32Exception or UnauthorizedAccessException) { /* The folder picture stays. */ }
+    }
+    private void DragHandle_Down(object sender, System.Windows.Input.MouseButtonEventArgs e) => dragStart = e.GetPosition(this);
+    private void DragHandle_Move(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed || dragStart is not Point start || !System.IO.File.Exists(job.Destination)) return;
+        var now = e.GetPosition(this);
+        if (Math.Abs(now.X - start.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(now.Y - start.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+        dragStart = null;
+        // Copy (never move): the download keeps its file, the drop target gets its own copy.
+        var data = new DataObject(DataFormats.FileDrop, new[] { job.Destination });
+        DragDrop.DoDragDrop(DragHandle, data, DragDropEffects.Copy);
     }
 }

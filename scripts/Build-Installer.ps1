@@ -70,7 +70,7 @@ try {
     })
     $taskInventory | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $taskStage 'payload-sha256.json') -Encoding utf8
     $taskPayloadBytes=(Get-ChildItem -LiteralPath $taskStage -File -Recurse | Measure-Object Length -Sum).Sum
-    if($taskPayloadBytes -gt 100000000){throw ('Installed payload exceeds the 100 MB target: {0:N2} MB' -f ($taskPayloadBytes/1000000))}
+    if($taskPayloadBytes -gt 110000000){throw ('Installed payload exceeds the 110 MB target: {0:N2} MB' -f ($taskPayloadBytes/1000000))}
     Write-Output ('Installed payload: {0:N2} MB, including video tools and the private .NET runtime.' -f ($taskPayloadBytes/1000000))
     New-Item -ItemType Directory -Path $taskOutput -Force | Out-Null
     Write-Output 'Compressing the self-contained application and bundled video tools...'

@@ -1,7 +1,7 @@
 (() => {
-  if (globalThis.apexVideoPanelVersion === '0.9.3') return;
+  if (globalThis.apexVideoPanelVersion === '1.0.0') return;
   globalThis.apexVideoPanelDispose?.();
-  globalThis.apexVideoPanelVersion = '0.9.3';
+  globalThis.apexVideoPanelVersion = '1.0.0';
   const events = new AbortController();
   document.querySelectorAll('[data-apex-video-panel]').forEach(host => host.remove());
   const panels = new Map();
@@ -44,7 +44,7 @@
   const sizeText = size => !size ? 'Size unknown' : size >= 1073741824 ? `${(size / 1073741824).toFixed(2)} GB` : `${(size / 1048576).toFixed(2)} MB`;
   function makePanel(video) {
     const host = document.createElement('div');
-    host.setAttribute('data-apex-video-panel', '0.9.3');
+    host.setAttribute('data-apex-video-panel', '1.0.0');
     host.style.cssText = 'all:initial!important;position:fixed!important;z-index:2147483647!important;display:none!important;';
     const root = host.attachShadow({ mode: 'closed' });
     root.innerHTML = `<style>

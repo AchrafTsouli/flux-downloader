@@ -16,6 +16,13 @@
     if (!force && (event.ctrlKey || event.shiftKey || event.altKey)) return;
     const link = event.composedPath().find(element => element?.tagName === "A");
     if (!link || typeof link.href !== "string") return;
+    // Magnet links open Flux's torrent window instead of an external torrent program.
+    if (/^magnet:\?(.*&)?xt=urn:btih:/i.test(link.href) && link.href.length <= 8192) {
+      event.preventDefault(); event.stopImmediatePropagation();
+      try { const response = await chrome.runtime.sendMessage({ action: "magnet", url: link.href }); if (response?.ok) return; } catch { }
+      location.assign(link.href);
+      return;
+    }
     try {
       const url = new URL(link.href);
       if (!["http:","https:"].includes(url.protocol) || url.username || url.password) return;

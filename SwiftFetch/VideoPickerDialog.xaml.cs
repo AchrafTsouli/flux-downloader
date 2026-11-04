@@ -76,6 +76,11 @@ public partial class VideoPickerDialog : Window
                 FormatList.ItemsSource = catalog.Formats.Select(format => new FormatItem(format)).ToArray();
                 FormatList.SelectedIndex = 0;
                 FormatList.Visibility = Visibility.Visible;
+                ClipPanel.Visibility = Visibility.Visible;
+                exactAvailable = await tools.SupportsExactCutAsync(cancel.Token);
+                ExactCutRadio.IsEnabled = exactAvailable;
+                if (!exactAvailable) ExactCutRadio.ToolTip = "Needs the updated video tools with Windows' H.264 encoder.";
+                UpdateClipHint();
                 StatusText.Text = "Choose a quality. Separate audio and video tracks are joined automatically.";
                 DownloadButton.IsEnabled = true;
                 FormatList.Focus();
@@ -100,12 +105,72 @@ public partial class VideoPickerDialog : Window
     private void SelectNone_Click(object sender, RoutedEventArgs e) { entries.ForEach(entry => entry.Selected = false); UpdateCount(); }
     private void FormatList_DoubleClick(object sender, MouseButtonEventArgs e) { if (FormatList.SelectedItem != null) Download_Click(sender, e); }
 
+    private bool exactAvailable;
+
+    /// <summary>Accepts 90, 1:30, 1:02:03 and decimals; null for empty text, NaN when invalid.</summary>
+    public static double? ParseTime(string text)
+    {
+        text = text.Trim();
+        if (text.Length == 0) return null;
+        double total = 0;
+        var parts = text.Split(':');
+        if (parts.Length > 3) return double.NaN;
+        foreach (string part in parts)
+        {
+            if (!double.TryParse(part, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double value) || value < 0) return double.NaN;
+            total = total * 60 + value;
+        }
+        return total;
+    }
+    public static string FormatTime(double seconds)
+    {
+        var time = TimeSpan.FromSeconds(Math.Round(seconds));
+        return time.TotalHours >= 1 ? time.ToString(@"h\:mm\:ss") : time.ToString(@"m\:ss");
+    }
+    private (double? Start, double? End, string? Error) ClipRange()
+    {
+        double? start = ParseTime(ClipFromBox.Text), end = ParseTime(ClipToBox.Text);
+        double? length = Catalog?.DurationSeconds;
+        if (start is double s && double.IsNaN(s) || end is double e && double.IsNaN(e)) return (null, null, "Use seconds, m:ss or h:mm:ss.");
+        if (start is 0) start = null;
+        if (start == null && end == null) return (null, null, "Choose a start or end time.");
+        if (end != null && (start ?? 0) >= end) return (null, null, "The end must come after the start.");
+        if (length is double total && ((start ?? 0) >= total || end > total + 1)) return (null, null, $"The video is {FormatTime(total)} long.");
+        return (start, end, null);
+    }
+    private void UpdateClipHint()
+    {
+        var (start, end, error) = ClipRange();
+        string length = Catalog?.DurationSeconds is double total ? $"Video length {FormatTime(total)}. " : "";
+        ClipHint.Text = ClipCheck.IsChecked != true ? length + "Only the chosen part is downloaded." : error ?? $"{length}Part: {FormatTime(start ?? 0)} to {(end is double last ? FormatTime(last) : "the end")} ({FormatTime((end ?? Catalog?.DurationSeconds ?? 0) - (start ?? 0))}).";
+    }
+    private void Clip_Changed(object sender, RoutedEventArgs e) { ClipFields.IsEnabled = ClipCheck.IsChecked == true; UpdateClipHint(); }
+    private void ClipTime_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e) { if (IsLoaded) UpdateClipHint(); }
+    private void Preview_Click(object sender, RoutedEventArgs e)
+    {
+        double start = ParseTime(ClipFromBox.Text) is double s && !double.IsNaN(s) ? s : 0;
+        string url = VideoPages.Canonicalize(page) ?? page;
+        if (VideoPages.IsYouTube(url)) url += "&t=" + (int)start + "s";
+        else if (VideoPages.SiteName(url) is "vimeo.com" or "dailymotion.com") url += "#t=" + (int)start + "s";
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch (Exception error) when (error is System.ComponentModel.Win32Exception or InvalidOperationException) { ClipHint.Text = error.Message; }
+    }
+
     private void Download_Click(object sender, RoutedEventArgs e)
     {
         if (Catalog != null)
         {
             if (FormatList.SelectedItem is not FormatItem item) return;
             Selection = item.Format.ToSelection();
+            if (ClipCheck.IsChecked == true)
+            {
+                var (start, end, error) = ClipRange();
+                if (error != null) { ClipHint.Text = error; ClipFromBox.Focus(); return; }
+                Selection.ClipStart = start; Selection.ClipEnd = end;
+                Selection.ClipExact = exactAvailable && ExactCutRadio.IsChecked == true && !Selection.AudioOnly;
+                if (Selection.TotalBytes is long bytes && Catalog.DurationSeconds is double total && total > 0)
+                { Selection.TotalBytes = (long)(bytes * (((end ?? total) - (start ?? 0)) / total)); Selection.Approximate = true; }
+            }
         }
         else if (Playlist == null || !entries.Any(entry => entry.Selected)) return;
         IndependentDialogs.Finish(this, true);

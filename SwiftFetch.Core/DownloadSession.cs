@@ -9,6 +9,22 @@ public sealed class DownloadSession
     public string? UserAgent { get; set; }
     public string? Authorization { get; set; }
     public List<SessionCookie> Cookies { get; set; } = [];
+    /// <summary>Headers the browser itself sent for this download (client hints, Sec-Fetch-*, language), replayed so strict sites accept the request.</summary>
+    public List<SessionHeader> Headers { get; set; } = [];
+    public static readonly string[] AllowedHeaders = ["accept", "accept-language", "sec-fetch-site", "sec-fetch-mode", "sec-fetch-dest", "sec-fetch-user", "sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform", "upgrade-insecure-requests", "x-requested-with"];
+
+    public DownloadSession Clone() => new() { Origin = Origin, Referer = Referer, UserAgent = UserAgent, Authorization = Authorization, Cookies = [.. Cookies], Headers = [.. Headers] };
+
+    /// <summary>The headers a browser sends when the address is opened directly.</summary>
+    public static List<SessionHeader> NavigationHeaders(bool fromPage) =>
+    [
+        new() { Name = "Accept", Value = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" },
+        new() { Name = "Sec-Fetch-Dest", Value = "document" },
+        new() { Name = "Sec-Fetch-Mode", Value = "navigate" },
+        new() { Name = "Sec-Fetch-Site", Value = fromPage ? "same-site" : "none" },
+        new() { Name = "Sec-Fetch-User", Value = "?1" },
+        new() { Name = "Upgrade-Insecure-Requests", Value = "1" },
+    ];
 
     public void Validate(string downloadUrl)
     {
@@ -24,6 +40,9 @@ public sealed class DownloadSession
         foreach (var header in new[] { Referer, UserAgent, Authorization })
             if (header?.Length > 8192 || header?.Any(char.IsControl) == true) throw new ArgumentException("Invalid session header.");
         if (Authorization != null && !AuthenticationHeaderValue.TryParse(Authorization, out _)) throw new ArgumentException("Invalid authorization header.");
+        Headers ??= [];
+        if (Headers.Count > 16 || Headers.Any(h => h == null || !AllowedHeaders.Contains(h.Name?.ToLowerInvariant()) || h.Value == null || h.Value.Length > 2048 || h.Value.Any(char.IsControl)))
+            throw new ArgumentException("Invalid browser header.");
         if (Referer != null && (!Uri.TryCreate(Referer, UriKind.Absolute, out var page) || page.Scheme is not ("http" or "https") || page.UserInfo.Length > 0)) throw new ArgumentException("Invalid referring page.");
     }
 
@@ -38,6 +57,11 @@ public sealed class DownloadSession
             request.Headers.TryAddWithoutValidation("User-Agent", UserAgent);
         }
         if (sameOrigin && Authorization != null) request.Headers.Authorization = AuthenticationHeaderValue.Parse(Authorization);
+        foreach (var header in Headers ?? [])
+        {
+            request.Headers.Remove(header.Name);
+            request.Headers.TryAddWithoutValidation(header.Name, header.Value);
+        }
         if (Referer != null)
         {
             var page = new Uri(Referer);
@@ -58,6 +82,12 @@ public sealed class DownloadSession
         return host.Equals(domain, StringComparison.OrdinalIgnoreCase) || (!hostOnly && host.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase));
     }
     public static bool PathMatches(string path, string cookiePath) => path == cookiePath || (path.StartsWith(cookiePath, StringComparison.Ordinal) && (cookiePath.EndsWith('/') || path.Length > cookiePath.Length && path[cookiePath.Length] == '/'));
+}
+
+public sealed class SessionHeader
+{
+    public string Name { get; set; } = "";
+    public string Value { get; set; } = "";
 }
 
 public sealed class SessionCookie

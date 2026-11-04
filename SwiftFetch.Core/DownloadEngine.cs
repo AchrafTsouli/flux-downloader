@@ -222,7 +222,7 @@ public sealed class DownloadEngine : IDisposable
             if (hasParts && job.TotalBytes != total) job.ResumeNote = "The server file size changed; restarting safely.";
             CleanupParts(job);
             job.Segments.Clear();
-            int maxForHost = (Uri.TryCreate(job.Url, UriKind.Absolute, out var hostUri) && hostUri.IdnHost.EndsWith("gofile.io", StringComparison.OrdinalIgnoreCase)) ? 2 : Options.MaximumConnections;
+            int maxForHost = Uri.TryCreate(job.Url, UriKind.Absolute, out var hostUri) && Options.LimitFor(hostUri) is int limit ? limit : Options.MaximumConnections;
             int count = ranged && total >= 1048576 ? Math.Clamp(job.RequestedConnections, 1, maxForHost) : 1;
             if (ranged && total is long length)
             {
@@ -302,6 +302,17 @@ public sealed class DownloadEngine : IDisposable
             response.Dispose();
             using var fallback = new HttpRequestMessage(HttpMethod.Get, job.Url);
             response = await SendAsync(fallback, token, job.Session);
+        }
+        if (response.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.NotAcceptable && !response.Headers.WwwAuthenticate.Any())
+        {
+            // Some sites accept only requests that look like a browser navigation (Sec-Fetch-*, an HTML Accept).
+            response.Dispose();
+            var navigation = DownloadSession.NavigationHeaders(job.Session?.Referer != null);
+            using var browserLike = new HttpRequestMessage(HttpMethod.Get, job.Url);
+            var trial = job.Session?.Clone() ?? new DownloadSession { Origin = new Uri(job.Url).GetLeftPart(UriPartial.Authority) + "/" };
+            trial.Headers = [.. trial.Headers.Where(h => navigation.All(n => !n.Name.Equals(h.Name, StringComparison.OrdinalIgnoreCase))), .. navigation];
+            response = await SendAsync(browserLike, token, trial);
+            if (response.IsSuccessStatusCode) job.Session = trial; // later requests keep the form the site accepted
         }
         using (response)
         {
@@ -482,8 +493,11 @@ public sealed class DownloadEngine : IDisposable
     private async Task RunSegmentsAsync(DownloadJob job, Action<int> report, CancellationToken token, Action? checkpoint)
     {
         using var workers = CancellationTokenSource.CreateLinkedTokenSource(token);
-        int maxForHost = (Uri.TryCreate(job.Url, UriKind.Absolute, out var hostUri) && hostUri.IdnHost.EndsWith("gofile.io", StringComparison.OrdinalIgnoreCase)) ? 2 : Options.MaximumConnections;
+        var hostUri = Uri.TryCreate(job.Url, UriKind.Absolute, out var parsed) ? parsed : null;
+        int? hostLimit = hostUri != null ? Options.LimitFor(hostUri) : null;
+        int maxForHost = hostLimit ?? Options.MaximumConnections;
         int count = job.RangeSupported ? Math.Clamp(job.RequestedConnections, 1, maxForHost) : 1;
+        int running = count;
         (int Index, bool Split)? Claim()
         {
             lock (job.SegmentGate)
@@ -493,7 +507,8 @@ public sealed class DownloadEngine : IDisposable
                     var part = job.Segments[i];
                     if (!part.Active && !part.Finished) { part.Active = true; return (i, false); }
                 }
-                int maxSegmentsForHost = (hostUri != null && hostUri.IdnHost.EndsWith("gofile.io", StringComparison.OrdinalIgnoreCase)) ? 2 : Options.MaximumSegments;
+                // A site that limits connections also gets no extra split requests beyond that limit.
+                int maxSegmentsForHost = hostLimit ?? Options.MaximumSegments;
                 if (!job.RangeSupported || job.Segments.Count >= maxSegmentsForHost) return null;
                 var candidate = job.Segments.Where(part => part.Active && part.End != null)
                     .OrderByDescending(part => part.End!.Value - part.Start + 1 - part.WrittenBytes).FirstOrDefault();
@@ -518,6 +533,15 @@ public sealed class DownloadEngine : IDisposable
                     int index = claim.Index;
                     if (claim.Split) checkpoint?.Invoke(); // Save outside the segment lock to avoid storage/segment lock inversion.
                     try { await TransferAsync(job, index, report, workers.Token); lock (job.SegmentGate) job.Segments[index].Finished = true; }
+                    catch (Exception error) when (IsRefusal(error) && Volatile.Read(ref running) > 1 && !workers.IsCancellationRequested)
+                    {
+                        // The site refused one more connection: this one stops, its part stays for the others,
+                        // and the site is remembered with the number that worked.
+                        int remaining = Interlocked.Decrement(ref running);
+                        if (hostUri != null) Options.Learn(hostUri, remaining);
+                        job.ResumeNote = $"{hostUri?.IdnHost ?? "The server"} allows fewer connections; continuing with {remaining}.";
+                        return;
+                    }
                     finally { lock (job.SegmentGate) job.Segments[index].Active = false; }
                 }
             }
@@ -538,6 +562,13 @@ public sealed class DownloadEngine : IDisposable
             if (next != job.TotalBytes) throw new DownloadFailureException("Segment coverage does not match the file size.", DownloadErrorKind.Protocol);
         }
     }
+    // Refusals of a request (not failures while data flows): the site wants fewer connections.
+    private static bool IsRefusal(Exception error) => error switch
+    {
+        DownloadFailureException failure => failure.Kind is DownloadErrorKind.AccessDenied or DownloadErrorKind.RateLimited,
+        HttpRequestException http => http.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.ServiceUnavailable or HttpStatusCode.Forbidden,
+        _ => false
+    };
     private static void CheckAvailableSpace(DownloadJob job)
     {
         if (job.TotalBytes is not long total) return;
@@ -571,6 +602,7 @@ public sealed class DownloadEngine : IDisposable
             if (failure.Kind == DownloadErrorKind.AccessDenied && job.RangeSupported && job.RequestedConnections > 1)
             {
                 job.RequestedConnections = 1;
+                job.LearnedSingleConnection = true;
                 job.Retryable = true;
                 job.RetryAfter = TimeSpan.FromSeconds(1);
             }

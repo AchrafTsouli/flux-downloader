@@ -10,8 +10,12 @@
 
 - **Faster downloads:** up to 16 connections per file, with segments rebalanced while it downloads.
 - **Reliable resume:** pause, close the app or lose the connection; Flux continues from the saved byte position. Optional SHA-256 verification, and a disk-space check before starting.
-- **Browser capture:** the Chrome / Edge / Brave extension hands downloads to Flux, together with the cookies and referring page they need.
+- **Browser capture:** the Chrome / Edge / Brave extension hands downloads and magnet links to Flux, together with the cookies and referring page they need.
 - **Video and audio:** pick a quality on YouTube, Vimeo, X, TikTok, Instagram and many other sites, or use **Find available qualities** on any page with a video. Also downloads HLS/DASH streams, YouTube playlists and channels, and audio-only M4A.
+- **Download part of a video:** choose a start and end time; fast cut in seconds, or exact to the second using Windows' own H.264 encoder.
+- **Torrents:** magnet links and .torrent files, choose which files to download, public trackers and DHT to find peers, no sharing afterwards unless you want it.
+- **Strict sites:** replays the browser's own request headers, retries blocked video sites while imitating Chrome, and lowers connections per site when a server insists (and remembers it).
+- **Drag and drop:** drag a finished file from the completion window to the desktop, a folder or a chat.
 - **Queues and scheduling:** named queues, start and stop times, weekdays, a limit on simultaneous downloads, and shutdown or sleep when everything is done.
 - **Speed limits,** globally or per file.
 - **Stays up to date:** the video downloader (yt-dlp) updates itself daily, and Flux offers new releases signed by the project.

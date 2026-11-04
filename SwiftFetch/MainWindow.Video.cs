@@ -30,7 +30,8 @@ public partial class MainWindow
             string page = VideoPages.Canonicalize(uri.AbsoluteUri)!;
             var pageSession = SessionFor(session, page);
             string quality = System.Text.RegularExpressions.Regex.Match(selection.Label, @"\d+p").Value is { Length: > 0 } height ? height : selection.AudioOnly ? "audio" : selection.FormatId;
-            string name = FileNames.Sanitize($"{catalog.Title} ({quality}).{selection.Extension}");
+            string part = selection.IsClip ? $" (part {VideoPickerDialog.FormatTime(selection.ClipStart ?? 0).Replace(':', '.')}-{(selection.ClipEnd is double end ? VideoPickerDialog.FormatTime(end).Replace(':', '.') : "end")})" : "";
+            string name = FileNames.Sanitize($"{catalog.Title}{part} ({quality}).{selection.Extension}");
             var pageUri = new Uri(page);
             if (settings.ShowStartDownloadDialog)
             {

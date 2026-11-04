@@ -17,6 +17,13 @@ public sealed class VideoSelection
     public bool Approximate { get; set; }
     public bool AudioOnly { get; set; }
     public bool NoAudio { get; set; }
+    /// <summary>Download only this part of the video (seconds). Exact re-encodes the cut so it starts on the very second.</summary>
+    public double? ClipStart { get; set; }
+    public double? ClipEnd { get; set; }
+    public bool ClipExact { get; set; }
+    /// <summary>The site refused ordinary requests; yt-dlp imitates Chrome's network signature for it.</summary>
+    public bool Impersonate { get; set; }
+    [JsonIgnore] public bool IsClip => ClipStart != null || ClipEnd != null;
     [JsonIgnore] public bool IsPreset => FormatId.StartsWith(PresetPrefix, StringComparison.Ordinal);
     [JsonIgnore] public int? PresetHeight => IsPreset && int.TryParse(FormatId[PresetPrefix.Length..], out int height) ? height : null;
 
@@ -36,13 +43,16 @@ public sealed class VideoSelection
             : ValidFormatId(FormatId);
         if (VideoPages.Canonicalize(url) == null || !format || !Extensions.Contains(Extension) || Label == null || Label.Length > 200 || TotalBytes is < 0 || AudioOnly && NoAudio)
             throw new ArgumentException("Invalid video format selection.");
+        if (IsClip && !(ClipStart is null or (>= 0 and < 864000) && ClipEnd is null or (> 0 and <= 864000) && (ClipStart ?? 0) < (ClipEnd ?? double.MaxValue) && double.IsFinite(ClipStart ?? 0) && double.IsFinite(ClipEnd ?? 0)))
+            throw new ArgumentException("The clip must end after it starts, within the video.");
+        if (!IsClip && ClipExact) throw new ArgumentException("Exact cutting needs a start or end time.");
     }
 }
-public sealed record VideoFormat(string FormatId, string Label, string Extension, long? TotalBytes, bool Approximate, bool AudioOnly = false, bool NoAudio = false)
+public sealed record VideoFormat(string FormatId, string Label, string Extension, long? TotalBytes, bool Approximate, bool AudioOnly = false, bool NoAudio = false, bool Impersonate = false)
 {
-    public VideoSelection ToSelection() => new() { FormatId = FormatId, Label = Label, Extension = Extension, TotalBytes = TotalBytes, Approximate = Approximate, AudioOnly = AudioOnly, NoAudio = NoAudio };
+    public VideoSelection ToSelection() => new() { FormatId = FormatId, Label = Label, Extension = Extension, TotalBytes = TotalBytes, Approximate = Approximate, AudioOnly = AudioOnly, NoAudio = NoAudio, Impersonate = Impersonate };
 }
-public sealed record VideoCatalog(string Title, IReadOnlyList<VideoFormat> Formats, string? Site = null);
+public sealed record VideoCatalog(string Title, IReadOnlyList<VideoFormat> Formats, string? Site = null, double? DurationSeconds = null);
 public sealed record VideoPlaylistEntry(string Url, string Title, double? DurationSeconds);
 public sealed record VideoPlaylist(string Title, IReadOnlyList<VideoPlaylistEntry> Entries);
 /// <summary>Either a single video's qualities or a playlist's entries.</summary>
@@ -214,7 +224,8 @@ public static class VideoFormats
         if (result.Count == 0) throw new InvalidDataException("No unencrypted video is available for this page.");
         string title = Clip(Text(root,"title"), 200);
         string site = Clip(Text(root,"extractor_key"), 60);
-        return new(title.Length == 0 ? "Video" : title, result, site.Length == 0 ? null : site);
+        double duration = Number(root,"duration");
+        return new(title.Length == 0 ? "Video" : title, result, site.Length == 0 ? null : site, duration > 0 ? duration : null);
     }
 
     public static VideoPlaylist ParsePlaylist(string json, int maximum = 1000)

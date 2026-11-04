@@ -25,8 +25,11 @@
 
         <!-- Top Header: Yellow folder/envelope icon + Download Complete texts -->
         <DockPanel Grid.Row="0" Margin="0,0,0,12">
-            <!-- Iconic Yellow Folder Document Icon -->
-            <Viewbox Width="36" Height="36" Margin="0,0,14,0" VerticalAlignment="Center">
+            <!-- The finished file: drag it to the desktop, a folder or a chat. -->
+            <Border x:Name="DragHandle" Width="44" Height="44" Margin="0,0,12,0" VerticalAlignment="Center" CornerRadius="6" Cursor="Hand" Background="Transparent"
+                    ToolTip="Drag the file to the desktop, a folder or a chat" PreviewMouseLeftButtonDown="DragHandle_Down" MouseMove="DragHandle_Move">
+                <Grid>
+            <Viewbox x:Name="FolderArt" Width="36" Height="36">
                 <Canvas Width="36" Height="36">
                     <!-- Yellow Folder Body -->
                     <Path Data="M3,8 L13,8 L16,11 L33,11 C34,11 35,12 35,13 L35,29 C35,30 34,31 33,31 L3,31 C2,31 1,30 1,29 L1,10 C1,9 2,8 3,8 Z"
@@ -39,6 +42,9 @@
                           Fill="#F5C04A" Stroke="#C88E20" StrokeThickness="0.8"/>
                 </Canvas>
             </Viewbox>
+                    <Image x:Name="FileIconImage" Width="36" Height="36" Visibility="Collapsed" RenderOptions.BitmapScalingMode="HighQuality"/>
+                </Grid>
+            </Border>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="Download complete" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource ThemeForegroundFFFFFF}"/>
                 <TextBlock x:Name="DownloadedSizeBlock" Text="Downloaded 0 MB (0 Bytes)" Foreground="{DynamicResource ThemeForegroundC8C8C8}" FontSize="12" Margin="0,2,0,0"/>

@@ -19,12 +19,13 @@ cd "$build_dir"
   --disable-gpl --disable-nonfree --disable-version3 \
   --enable-shared --disable-static --enable-small --extra-cflags=-Os \
   --disable-everything --enable-ffmpeg --enable-ffprobe --disable-ffplay \
-  --disable-avdevice --disable-swscale --disable-swresample \
-  --enable-avfilter --enable-filter=anull,null \
+  --disable-avdevice --enable-swscale --enable-swresample --enable-mediafoundation --enable-d3d11va \
+  --enable-avfilter --enable-filter=anull,null,scale,format,aformat,aresample,trim,atrim,setpts,asetpts \
   --enable-network --enable-schannel \
   --enable-protocol=file,pipe,http,https,tcp,tls,crypto,data,concat,udp \
   --enable-demuxer=mov,matroska,mpegts,aac,ogg,mp3,flac,hls,concat \
-  --enable-decoder=aac,aac_latm,vp9 \
+  --enable-decoder=aac,aac_latm,vp9,vp8,h264,hevc,opus,vorbis,mp3 \
+  --enable-encoder=h264_mf,aac \
   --enable-muxer=mp4,mov,ipod,matroska,webm,adts,ogg,mpegts \
   --enable-parsers --enable-bsfs
 make -j4

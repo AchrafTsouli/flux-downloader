@@ -59,9 +59,10 @@ public partial class AddUrlDialog : Window
         string raw = UrlBox.Text.Trim();
         if (string.IsNullOrEmpty(raw) ||
             (!raw.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-             !raw.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+             !raw.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
+             SwiftFetch.Core.Torrents.MagnetHash(raw) == null))
         {
-            MessageBox.Show(this, "Please enter a valid HTTP or HTTPS address to download.", "Flux", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, "Enter an HTTP or HTTPS address, or a magnet link, to download.", "Flux", MessageBoxButton.OK, MessageBoxImage.Warning);
             UrlBox.Focus();
             return;
         }

@@ -202,8 +202,15 @@
         </Border>
 
         <!-- Middle Section: Overall Green Progress Bar -->
-        <ProgressBar x:Name="OverallProgressBar" Grid.Row="1" Style="{StaticResource GreenProgressBar}"
-                     Margin="0,10,0,10" Minimum="0" Maximum="100" Value="0"/>
+        <StackPanel Grid.Row="1" Margin="0,10,0,10">
+            <ProgressBar x:Name="OverallProgressBar" Style="{StaticResource GreenProgressBar}" Minimum="0" Maximum="100" Value="0"/>
+            <!-- Finishing stage after the transfer: joining tracks, saving or copying to another drive. -->
+            <DockPanel x:Name="PhasePanel" Margin="0,8,0,0" Visibility="Collapsed">
+                <TextBlock x:Name="PhasePercent" DockPanel.Dock="Right" FontSize="11" Margin="8,0,0,0" Foreground="{DynamicResource ThemeForegroundAAAAAA}"/>
+                <TextBlock x:Name="PhaseLabel" DockPanel.Dock="Top" FontSize="11" Margin="0,0,0,3" Foreground="{DynamicResource ThemeForegroundAAAAAA}"/>
+                <ProgressBar x:Name="PhaseBar" Height="6" Minimum="0" Maximum="1" Foreground="{DynamicResource AccentGradient}" Background="{DynamicResource ThemeBackground181818}" BorderThickness="0"/>
+            </DockPanel>
+        </StackPanel>
 
         <!-- Action Buttons: Hide details / Pause / Cancel -->
         <DockPanel Grid.Row="2" Margin="0,0,0,10" LastChildFill="False">

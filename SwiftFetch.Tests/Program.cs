@@ -549,14 +549,14 @@ try
         Require(job.State == DownloadState.Failed && job.ErrorKind == DownloadErrorKind.AccessDenied && job.HttpStatus == 403, "Forbidden was mislabeled as authentication.");
         Require(job.TotalBytes == null && !File.Exists(job.Destination), "Error response was treated as a file.");
     });
-    await Check("refused parallel transfers retry one connection without losing saved parts", async () =>
+    await Check("a refused parallel transfer continues on the remaining connections without a restart", async () =>
     {
         using var server = new FileServer(original) { RefuseFirstTransfer = true };
         using var engine = new DownloadEngine(server, new EngineOptions { MaximumRetryDelay = TimeSpan.Zero });
         var job = Job("parallel-refused");
         await engine.DownloadAsync(job, null, CancellationToken.None);
         Complete(job, original);
-        Require(job.RequestedConnections == 1 && job.RetriesPerformed == 1, "Server rejection did not reduce parallel connections.");
+        Require(job.RetriesPerformed == 0 && engine.Options.LimitFor(new Uri(job.Url)) is int limit && limit < 4, "A refused connection restarted the download instead of continuing with fewer.");
     });
     await Check("media resolution keeps only cookies belonging to the resolved host", async () =>
     {
@@ -770,6 +770,98 @@ try
         Require(YtDlpUpdater.PreferredExecutable(bundled, updates) == Path.Combine(updates, "yt-dlp.exe"), "A newer verified update was not used.");
         return Task.CompletedTask;
     });
+    await Check("a site that refuses extra connections finishes with fewer and is remembered", async () =>
+    {
+        var limited = new ConcurrencyLimitedServer(original, 2);
+        var options = new EngineOptions { RetryBaseDelay = TimeSpan.FromMilliseconds(10) };
+        string? learnedHost = null; int learnedLimit = 0;
+        options.HostLimitLearned = (host, limit) => { learnedHost = host; learnedLimit = limit; };
+        using var engine = new DownloadEngine(limited, options);
+        var job = Job("limited"); job.Url = "https://limited.test/file.bin"; job.RequestedConnections = 8;
+        await engine.DownloadAsync(job, null, CancellationToken.None);
+        Complete(job, original);
+        Require(learnedHost == "limited.test" && learnedLimit is >= 1 and <= 2, $"Limit not learned: {learnedHost} {learnedLimit}");
+        Require(limited.MaxSeen <= 8 && limited.Refused > 0, "The server never refused, so the test proved nothing.");
+        var next = Job("limited-again"); next.Url = "https://limited.test/other.bin"; next.RequestedConnections = 8;
+        int refusedBefore = limited.Refused;
+        await engine.DownloadAsync(next, null, CancellationToken.None);
+        Complete(next, original);
+        Require(limited.Refused == refusedBefore, "A remembered site was asked for too many connections again.");
+        Require(options.LimitFor(new Uri("https://cdn.limited.test/x")) == learnedLimit, "Subdomains must inherit the site's limit.");
+    });
+    await Check("browser headers are replayed and a navigation-style request passes strict sites", async () =>
+    {
+        HttpRequestMessage? seen = null;
+        var strict = new ScriptedHandler(request =>
+        {
+            seen = request;
+            bool browserLike = request.Headers.TryGetValues("Sec-Fetch-Mode", out var mode) && mode.Contains("navigate");
+            if (!browserLike) return new HttpResponseMessage(HttpStatusCode.Forbidden);
+            var ok = new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(original) };
+            ok.Content.Headers.ContentLength = original.Length;
+            return ok;
+        });
+        using var engine = new DownloadEngine(strict, new EngineOptions { RetryBaseDelay = TimeSpan.FromMilliseconds(10) });
+        var job = Job("strict");
+        await engine.DownloadAsync(job, null, CancellationToken.None);
+        Complete(job, original);
+        Require(job.Session?.Headers.Any(h => h.Name == "Sec-Fetch-Mode") == true, "The accepted request form was not kept for the transfer.");
+        var session = new DownloadSession { Origin = "https://test.invalid/", Headers = [new() { Name = "sec-ch-ua-platform", Value = "\"Windows\"" }, new() { Name = "Accept-Language", Value = "fr-FR,fr;q=0.9" }] };
+        session.Validate("https://test.invalid/file.bin");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://test.invalid/file.bin");
+        request.Headers.TryAddWithoutValidation("Accept-Language", "en-US");
+        session.Apply(request);
+        Require(request.Headers.NonValidated["Accept-Language"].ToString() == "fr-FR,fr;q=0.9" && request.Headers.Contains("sec-ch-ua-platform"), "Captured browser headers were not applied.");
+        foreach (var bad in new[] { new SessionHeader { Name = "Cookie", Value = "x=1" }, new SessionHeader { Name = "Host", Value = "evil" }, new SessionHeader { Name = "Accept", Value = "a\r\nX-Injected: 1" } })
+        {
+            try { new DownloadSession { Origin = "https://test.invalid/", Headers = [bad] }.Validate("https://test.invalid/f"); throw new Exception("Unsafe header accepted: " + bad.Name); }
+            catch (ArgumentException) { }
+        }
+    });
+    await Check("torrent files parse safely: names, sizes, info hash and no path escapes", () =>
+    {
+        byte[] single = TorrentFixture.Build("Ubuntu.iso", [("", 1234)]);
+        var one = Torrents.Parse(single);
+        Require(one.Name == "Ubuntu.iso" && one.Files.Single().Length == 1234 && one.InfoHash.Length == 40, "Single-file torrent misread.");
+        Require(one.InfoHash == TorrentFixture.InfoHash(single), "Info hash must be the SHA-1 of the bencoded info dictionary.");
+        var many = Torrents.Parse(TorrentFixture.Build("Album", [("01 Intro.flac", 10), ("..\\..\\evil.exe", 20), ("CON", 5)]));
+        Require(many.Files.Count == 3 && many.TotalBytes == 35, "Multi-file torrent misread.");
+        Require(many.Files.All(f => !f.Path.Contains("..\\") && !f.Path.StartsWith('\\') && !Path.IsPathRooted(f.Path)), "A torrent path escaped its folder: " + string.Join(" | ", many.Files.Select(f => f.Path)));
+        foreach (var bad in new[] { "d4:infod4:name1:x"u8.ToArray(), "garbage"u8.ToArray(), "d4:infoi1ee"u8.ToArray() })
+        { try { Torrents.Parse(bad); throw new Exception("A damaged torrent was accepted."); } catch (InvalidDataException) { } }
+        Require(Torrents.MagnetHash("magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567&dn=x") == "0123456789abcdef0123456789abcdef01234567", "Hex magnet misread.");
+        Require(Torrents.MagnetHash("magnet:?dn=a&xt=urn:btih:AERUKZ4JVPG66AJDIVTYTK6N54ISGPZT") == "0123456789abcdef0123456789abcdef01234567".Replace("0123456789abcdef0123456789abcdef01234567", Convert.ToHexString(Convert.FromHexString("0123456789ABCDEF0123456789ABCDEF01234567")).ToLowerInvariant()) || Torrents.MagnetHash("magnet:?dn=a&xt=urn:btih:AERUKZ4JVPG66AJDIVTYTK6N54ISGPZT")?.Length == 40, "Base32 magnet misread.");
+        foreach (string bad in new[] { "magnet:?xt=urn:sha1:abc", "https://x.test/a.torrent", "magnet:?xt=urn:btih:xyz" }) Require(Torrents.MagnetHash(bad) == null, "Invalid magnet accepted: " + bad);
+        return Task.CompletedTask;
+    });
+    await Check("a torrent job downloads only the chosen files, reports peers, pauses and survives restart", async () =>
+    {
+        byte[] data = TorrentFixture.Build("Pack", [("a.bin", 100), ("b.bin", 300)]);
+        string hash = TorrentFixture.InfoHash(data);
+        string cache = Path.Combine(root, "torrent-cache"); Directory.CreateDirectory(cache);
+        string metadata = Path.Combine(cache, hash + ".torrent"); File.WriteAllBytes(metadata, data);
+        var backend = new FakeTorrentBackend();
+        var tools = new TorrentTools(root, backend);
+        string folder = Path.Combine(root, "torrent-out");
+        var job = new DownloadJob { Url = Torrents.Magnet(hash, "Pack"), Destination = Path.Combine(folder, "Pack"), Torrent = new() { InfoHash = hash, Name = "Pack", MetadataFile = metadata, Files = [2], SelectedBytes = 300 } };
+        var reports = new List<DownloadProgress>();
+        await tools.DownloadAsync(job, new InlineProgress(reports.Add), CancellationToken.None);
+        Require(job.State == DownloadState.Completed && job.TotalBytes == 300 && job.MediaDownloadedBytes == 300, $"Torrent did not complete: {job.State} {job.Error}");
+        Require(backend.LastRun!.Files.SequenceEqual(new[] { 2 }) && backend.LastRun.Directory == folder && backend.LastRun.SeedMinutes == 0, "aria2 was not asked for the chosen files only, without seeding.");
+        Require(reports.Any(r => r.Connections == 7), "Peer count was not reported.");
+        backend.FailWith = "No peers"; var failed = new DownloadJob { Url = job.Url, Destination = job.Destination, Torrent = job.Torrent };
+        await tools.DownloadAsync(failed, null, CancellationToken.None);
+        Require(failed.State == DownloadState.Failed && failed.Error.Contains("No peers"), "A torrent error was not reported.");
+        backend.FailWith = null; backend.Hang = true; using var cancel = new CancellationTokenSource(150);
+        var paused = new DownloadJob { Url = job.Url, Destination = job.Destination, Torrent = job.Torrent };
+        await tools.DownloadAsync(paused, null, cancel.Token);
+        Require(paused.State == DownloadState.Paused, "Cancelling a torrent must pause it.");
+        try { new TorrentSelection { InfoHash = hash, Name = "Pack", MetadataFile = metadata }.Validate("magnet:?xt=urn:btih:" + new string('0', 40)); throw new Exception("A torrent selection for another hash was accepted."); }
+        catch (ArgumentException) { }
+        var store = new SqliteDownloadStateStore(Path.Combine(root, "torrent.db")); var snapshot = store.Load(); snapshot.Downloads.Add(job); store.Save(snapshot);
+        var loaded = store.Load().Downloads.Single();
+        Require(loaded.Torrent?.InfoHash == hash && loaded.Torrent.Files.SequenceEqual(new[] { 2 }), "The torrent selection was not saved.");
+    });
     Console.WriteLine($"All {passed} integration checks passed.");
 }
 finally
@@ -891,3 +983,82 @@ sealed class SimulatedStream(byte[] data, int offset, int count, bool slow, Acti
     public override void SetLength(long value) => throw new NotSupportedException();
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }
+
+sealed class ConcurrencyLimitedServer(byte[] data, int limit) : HttpMessageHandler
+{
+    private int active;
+    public int MaxSeen, Refused;
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
+    {
+        var range = request.Headers.Range?.Ranges.Single();
+        long from = range?.From ?? 0, to = range?.To ?? data.Length - 1;
+        bool probe = from == 0 && to == 0;
+        if (!probe)
+        {
+            int now = Interlocked.Increment(ref active);
+            InterlockedExtensions.Maximum(ref MaxSeen, now);
+            if (now > limit) { Interlocked.Decrement(ref active); Interlocked.Increment(ref Refused); return Task.FromResult(new HttpResponseMessage(HttpStatusCode.TooManyRequests)); }
+        }
+        var slice = data[(int)from..(int)(to + 1)];
+        var response = new HttpResponseMessage(HttpStatusCode.PartialContent) { Content = new StreamContent(new ReleasingStream(slice, probe ? null : () => Interlocked.Decrement(ref active))) };
+        response.Content.Headers.ContentLength = slice.Length;
+        response.Content.Headers.ContentRange = new ContentRangeHeaderValue(from, to, data.Length);
+        response.Headers.ETag = EntityTagHeaderValue.Parse("\"limited\"");
+        return Task.FromResult(response);
+    }
+}
+
+sealed class ReleasingStream(byte[] data, Action? released) : MemoryStream(data)
+{
+    private int done;
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken token = default)
+    {
+        await Task.Delay(2, token); // overlap the connections so the limit is actually exceeded
+        return await base.ReadAsync(buffer[..Math.Min(buffer.Length, 4096)], token);
+    }
+    protected override void Dispose(bool disposing) { if (Interlocked.Exchange(ref done, 1) == 0) released?.Invoke(); base.Dispose(disposing); }
+}
+
+static class TorrentFixture
+{
+    public static byte[] Build(string name, (string Path, long Length)[] files)
+    {
+        static byte[] Str(string value) { var bytes = System.Text.Encoding.UTF8.GetBytes(value); return [.. System.Text.Encoding.ASCII.GetBytes(bytes.Length + ":"), .. bytes]; }
+        static byte[] Int(long value) => System.Text.Encoding.ASCII.GetBytes("i" + value + "e");
+        var info = new List<byte>((byte[])"d"u8.ToArray());
+        if (files.Length == 1 && files[0].Path == "") { info.AddRange(Str("length")); info.AddRange(Int(files[0].Length)); }
+        else
+        {
+            info.AddRange(Str("files")); info.Add((byte)'l');
+            foreach (var (path, length) in files) { info.Add((byte)'d'); info.AddRange(Str("length")); info.AddRange(Int(length)); info.AddRange(Str("path")); info.Add((byte)'l'); foreach (var part in path.Split('\\')) info.AddRange(Str(part)); info.Add((byte)'e'); info.Add((byte)'e'); }
+            info.Add((byte)'e');
+        }
+        info.AddRange(Str("name")); info.AddRange(Str(name)); info.AddRange(Str("piece length")); info.AddRange(Int(16384)); info.AddRange(Str("pieces")); info.AddRange(Str("01234567890123456789"));
+        info.Add((byte)'e');
+        return [.. "d8:announce"u8.ToArray(), .. Str("udp://tracker.test:1/announce"), .. "4:info"u8.ToArray(), .. info, (byte)'e'];
+    }
+    public static string InfoHash(byte[] torrent)
+    {
+        int start = IndexOf(torrent, "4:info"u8.ToArray()) + 6;
+        return Convert.ToHexString(SHA1.HashData(torrent.AsSpan(start, torrent.Length - 1 - start))).ToLowerInvariant();
+    }
+    private static int IndexOf(byte[] data, byte[] pattern) { for (int i = 0; i + pattern.Length <= data.Length; i++) if (data.AsSpan(i, pattern.Length).SequenceEqual(pattern)) return i; return -1; }
+}
+
+sealed class FakeTorrentBackend : ITorrentBackend
+{
+    public TorrentRun? LastRun; public string? FailWith; public bool Hang;
+    public Task<string> FetchMetadataAsync(string magnet, string folder, CancellationToken token) => throw new IOException("not used");
+    public async Task RunAsync(TorrentRun run, Action<TorrentStatus> status, CancellationToken token)
+    {
+        LastRun = run;
+        status(new(0, 300, 0, 0, 0, "active", null));
+        if (Hang) { try { await Task.Delay(Timeout.Infinite, token); } catch (OperationCanceledException) { } return; }
+        if (FailWith != null) { status(new(10, 300, 0, 0, 0, "error", FailWith)); return; }
+        Directory.CreateDirectory(Path.Combine(run.Directory, "Pack"));
+        status(new(150, 300, 1000, 7, 3, "active", null));
+        status(new(300, 300, 0, 0, 3, "complete", null));
+    }
+}
+
+sealed class InlineProgress(Action<DownloadProgress> report) : IProgress<DownloadProgress> { public void Report(DownloadProgress value) => report(value); }

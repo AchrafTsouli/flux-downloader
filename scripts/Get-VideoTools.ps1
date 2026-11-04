@@ -3,7 +3,7 @@
 # video-tools/sources.json. Run once after cloning, before building the installer.
 param(
   [string]$Repository,
-  [string]$Tag = 'video-tools'
+  [string]$Tag = 'video-tools-1.0.0'
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot

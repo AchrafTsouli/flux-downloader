@@ -45,6 +45,14 @@ $taskYt=Join-Path $taskRoot 'video-tools/yt-dlp.exe'
 if(!(Test-Path -LiteralPath $taskYt) -or (Get-FileHash -LiteralPath $taskYt).Hash -ne $taskYtHash){$taskYt=Join-Path $taskDownloads 'yt-dlp.exe';Get-Asset 'https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe' $taskYtHash $taskYt}
 if(![string]::Equals([IO.Path]::GetFullPath($taskYt),(Join-Path $Destination 'yt-dlp.exe'),[StringComparison]::OrdinalIgnoreCase)){Copy-Item -LiteralPath $taskYt -Destination (Join-Path $Destination 'yt-dlp.exe') -Force}
 Copy-Item -LiteralPath (Join-Path $taskDownloads 'qjs.exe') -Destination $Destination -Force
+# Torrent engine: the official aria2 Windows build, verified by the archive's recorded SHA-256 (GPL-2.0, separate program).
+$taskAriaZip=Join-Path $taskDownloads 'aria2-1.37.0-win-64bit-build1.zip'
+Get-Asset 'https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip' '67D015301EEF0B612191212D564C5BB0A14B5B9C4796B76454276A4D28D9B288' $taskAriaZip
+$taskAria=Join-Path $taskDownloads 'aria2'
+if(!(Test-Path -LiteralPath (Join-Path $taskAria 'aria2-1.37.0-win-64bit-build1/aria2c.exe'))){Expand-Archive -LiteralPath $taskAriaZip -DestinationPath $taskAria -Force}
+Copy-Item -LiteralPath (Join-Path $taskAria 'aria2-1.37.0-win-64bit-build1/aria2c.exe') -Destination $Destination -Force
+Copy-Item -LiteralPath (Join-Path $taskAria 'aria2-1.37.0-win-64bit-build1/COPYING') -Destination (Join-Path $Destination 'ARIA2-LICENSE.txt') -Force
+Copy-Item -LiteralPath (Join-Path $taskAria 'aria2-1.37.0-win-64bit-build1/LICENSE.OpenSSL') -Destination (Join-Path $Destination 'ARIA2-OPENSSL-LICENSE.txt') -Force
 Get-ChildItem -LiteralPath (Join-Path $taskPrefix 'bin') -File | Where-Object Extension -in @('.exe','.dll')|ForEach-Object{Copy-Item -LiteralPath $_.FullName -Destination $Destination -Force}
 Copy-Item -LiteralPath (Join-Path $taskFfmpegSource 'COPYING.LGPLv2.1') -Destination (Join-Path $Destination 'FFMPEG-LICENSE.txt') -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Build-CompactFFmpeg.sh') -Destination (Join-Path $Destination 'FFMPEG-BUILD.txt') -Force
@@ -58,12 +66,13 @@ Build: scripts/Build-CompactFFmpeg.sh (SHA256: $taskScriptHash).
 Local source fix: mov_read_chnl returns ff_mov_read_chnl's status rather than an
 uninitialized variable; the one-line patch is applied by the build script.
 The shipped DLLs can be replaced/relinked with an ABI-compatible FFmpeg 8 build.
-Only packet-copy merging, containers, parsers, bitstream filters and networking
-used by Apex are included. Apex does not offer transcoding or video editing.
+Packet-copy merging, containers, parsers, bitstream filters and networking, plus
+H.264/HEVC/VP8/VP9 decoding and Windows Media Foundation H.264 encoding (h264_mf),
+used only to cut a clip to the exact second. No encoder code is bundled for H.264.
 Build-only toolchain: LLVM-MinGW 20261006 UCRT x64; MSYS2 2026-09-27 + GNU Make.
 Rebuild using scripts/Install-VideoTools.ps1. No compiler is needed by end users.
 "@|Set-Content -LiteralPath (Join-Path $Destination 'FFMPEG-SOURCE.txt') -Encoding utf8
 $taskFiles=@(Get-ChildItem -LiteralPath $Destination -File|Where-Object Extension -in @('.exe','.dll')|Where-Object Name -ne 'node.exe'|ForEach-Object{[pscustomobject]@{name=$_.Name;bytes=$_.Length;sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}})
-@{ytDlp=@{version='2026.08.19';sha256=$taskYtHash;url='https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe'};quickjs=@{version='0.17.0';sha256=$taskQuickHash;url='https://github.com/quickjs-ng/quickjs/releases/download/v0.17.0/qjs-windows-x86_64.exe'};ffmpeg=@{version='8.1.2';sourceSha256=$taskSourceHash;url='https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz';configurationSha256=$taskScriptHash};files=$taskFiles}|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $Destination 'sources.json') -Encoding utf8
+@{ytDlp=@{version='2026.08.19';sha256=$taskYtHash;url='https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe'};aria2=@{version='1.37.0';sha256='67d015301eef0b612191212d564c5bb0a14b5b9c4796b76454276a4d28d9b288';url='https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip';license='GPL-2.0-or-later (separate program, run as a child process)'};quickjs=@{version='0.17.0';sha256=$taskQuickHash;url='https://github.com/quickjs-ng/quickjs/releases/download/v0.17.0/qjs-windows-x86_64.exe'};ffmpeg=@{version='8.1.2';sourceSha256=$taskSourceHash;url='https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz';configurationSha256=$taskScriptHash};files=$taskFiles}|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $Destination 'sources.json') -Encoding utf8
 foreach($taskObsolete in @('node.exe','NODE-LICENSE.txt')){$taskOld=Join-Path $Destination $taskObsolete;if(Test-Path -LiteralPath $taskOld){Remove-Item -LiteralPath $taskOld -Force}}
 Write-Output ('Compact video tools ready: {0:N2} MB' -f ((Get-ChildItem -LiteralPath $Destination -File|Measure-Object Length -Sum).Sum/1000000))

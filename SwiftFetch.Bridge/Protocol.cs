@@ -33,6 +33,7 @@ public static class Protocol
         "video-formats" when VideoPages.Canonicalize(request.Url) == null => "Use an HTTP/HTTPS video page or stream address without embedded credentials.",
         "video-formats" => ValidateSession(request),
         "download" when !Guid.TryParse(request.RequestId, out _) => "A valid request ID is required.",
+        "download" when Torrents.MagnetHash(request.Url) != null => request.Video == null && request.Session == null ? null : "Magnet links carry no video selection or session.",
         "download" when request.Url?.Length > 16384 || !Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(uri.UserInfo) => "Only HTTP/HTTPS file links without embedded credentials are supported.",
         "download" when request.FileName?.Length > 1024 => "The filename is too long.",
         "download" => ValidateSession(request),

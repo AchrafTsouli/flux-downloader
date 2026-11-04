@@ -1,3 +1,25 @@
+// Headers the browser sent for a request a moment ago. Some sites accept only exactly that request
+// (client hints, Sec-Fetch-*, language); Flux replays them. Kept in memory for two minutes.
+const sentHeaders = new Map();
+const keptHeaders = /^(accept|accept-language|sec-fetch-(site|mode|dest|user)|sec-ch-ua(-mobile|-platform)?|upgrade-insecure-requests|x-requested-with)$/i;
+export function rememberRequest(details) {
+  if (!/^https?:/i.test(details.url) || !Array.isArray(details.requestHeaders)) return;
+  const headers = details.requestHeaders.filter(h => keptHeaders.test(h.name) && typeof h.value === 'string' && h.value.length <= 2048 && !/[\x00-\x1f]/.test(h.value)).slice(0, 16).map(h => ({ name: h.name, value: h.value }));
+  if (!headers.length) return;
+  sentHeaders.set(details.url, { at: Date.now(), headers });
+  if (sentHeaders.size > 300) for (const [key, value] of sentHeaders) if (Date.now() - value.at > 120000 || sentHeaders.size > 300) sentHeaders.delete(key);
+}
+export function installHeaderCapture(api) {
+  try {
+    const extra = api.webRequest.OnSendHeadersOptions?.EXTRA_HEADERS;
+    api.webRequest.onSendHeaders.addListener(rememberRequest, { urls: ['http://*/*', 'https://*/*'], types: ['main_frame', 'sub_frame', 'media', 'object', 'other', 'xmlhttprequest'] }, extra ? ['requestHeaders', extra] : ['requestHeaders']);
+  } catch { /* Without header access the cookies and referring page still go along. */ }
+}
+export function browserHeaders(url) {
+  const entry = sentHeaders.get(url);
+  return entry && Date.now() - entry.at < 120000 ? entry.headers : [];
+}
+
 export async function downloadSession(api, url, tabId, pageUrl, frameId = 0) {
   try { return await collectDownloadSession(api, url, tabId, pageUrl, frameId); }
   catch { throw new Error("Browser session access is unavailable. Reload SwiftFetch and allow cookies for this site."); }
@@ -5,7 +27,7 @@ export async function downloadSession(api, url, tabId, pageUrl, frameId = 0) {
 
 async function collectDownloadSession(api, url, tabId, pageUrl, frameId) {
   const origin = new URL(url).origin;
-  const session = { origin, userAgent: globalThis.navigator?.userAgent || "", cookies: [] };
+  const session = { origin, userAgent: globalThis.navigator?.userAgent || "", cookies: [], headers: browserHeaders(url) };
   if (pageUrl && /^https?:/.test(pageUrl)) session.referer = pageUrl;
   if (!api.cookies) return session;
   const stores = await api.cookies.getAllCookieStores();

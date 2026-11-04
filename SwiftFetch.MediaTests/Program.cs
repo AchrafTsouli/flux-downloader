@@ -28,6 +28,7 @@ if (args.FirstOrDefault(value=>value.StartsWith("--probe=")) is string probeArg)
     if(args.FirstOrDefault(value=>value.StartsWith("--download=")) is string preset)
     {
         string kind=preset[11..];var selection=kind=="audio"?VideoSelection.Preset(null,true):kind=="best"?VideoSelection.Preset(null,false):kind=="first"?found.Catalog.Formats[^1].ToSelection():VideoSelection.Preset(int.Parse(kind),false);
+        if(args.FirstOrDefault(value=>value.StartsWith("--clip="))?[7..].Split('-') is [var from,var to]){selection.ClipStart=double.Parse(from,System.Globalization.CultureInfo.InvariantCulture);selection.ClipEnd=double.Parse(to,System.Globalization.CultureInfo.InvariantCulture);selection.ClipExact=args.Contains("--exact");}
         var job=new DownloadJob{Url=target,Destination=Path.Combine(root,"probe."+selection.Extension),Video=selection};
         await real.DownloadAsync(job,null,probeTimeout.Token);
         Console.WriteLine(job.State==DownloadState.Completed?$"DOWNLOADED {job.Destination} {new FileInfo(job.Destination).Length} bytes, tracks {string.Join("+",job.MediaTracks)}":$"FAILED {job.Error}");
@@ -186,6 +187,27 @@ await CheckAsync("referer and browser identity are forwarded to the video tools"
     var args=runner.Calls[0].ArgumentList;
     Require(job.State==DownloadState.Completed&&args[args.IndexOf("--referer")+1]=="https://page.test/watch"&&args[args.IndexOf("--user-agent")+1]=="TestAgent/1"&&args[^1]==stream,"Session headers not forwarded");
 });
+await CheckAsync("exact clips download only the part, then re-encode it with Windows' H.264 encoder",async()=>{
+    runner.Calls.Clear();
+    var job=new DownloadJob{Url=page,Destination=Path.Combine(root,"clip.mp4"),Video=new(){FormatId="137+140",Extension="mp4",Label="1080p",ClipStart=13.4,ClipEnd=21.7,ClipExact=true}};
+    await pipelineFake.DownloadAsync(job,null,CancellationToken.None);
+    Require(job.State==DownloadState.Completed&&File.Exists(job.Destination),"Exact clip failed: "+job.Error);
+    var yt=runner.Calls.First(c=>c.FileName.EndsWith("yt-dlp.exe")).ArgumentList;
+    Require(yt[yt.IndexOf("--download-sections")+1]=="*13.4-21.7"&&!yt.Contains("--force-keyframes-at-cuts"),"Clip range not passed, or yt-dlp asked for libx264.");
+    var ff=runner.Calls.First(c=>c.FileName.EndsWith("ffmpeg.exe")).ArgumentList;
+    Require(ff.Contains("h264_mf")&&ff.Contains("aac"),"The exact cut did not use the Media Foundation encoder.");
+    runner.Av1=true; var av1=new DownloadJob{Url=page,Destination=Path.Combine(root,"clip-av1.mp4"),Video=new(){FormatId="399+140",Extension="mp4",Label="AV1",ClipStart=5,ClipExact=true}};
+    await pipelineFake.DownloadAsync(av1,null,CancellationToken.None); runner.Av1=false;
+    Require(av1.State==DownloadState.Failed&&av1.Error.Contains("AV1"),"An AV1 exact cut must explain itself.");
+    try{new VideoSelection{FormatId="18",ClipStart=30,ClipEnd=10}.Validate(page);throw new Exception("A clip ending before its start was accepted.");}catch(ArgumentException){}
+});
+await CheckAsync("a site that refuses yt-dlp (403) is retried once imitating Chrome, and remembered",async()=>{
+    runner.Calls.Clear(); runner.Block403=true;
+    var job=new DownloadJob{Url=page,Destination=Path.Combine(root,"blocked.mp4"),Video=new(){FormatId="137+140",Extension="mp4",Label="1080p"}};
+    await pipelineFake.DownloadAsync(job,null,CancellationToken.None); runner.Block403=false;
+    var calls=runner.Calls.Where(c=>c.FileName.EndsWith("yt-dlp.exe")).ToArray();
+    Require(job.State==DownloadState.Completed&&calls.Length==2&&!calls[0].ArgumentList.Contains("--impersonate")&&calls[1].ArgumentList.Contains("--impersonate")&&job.Video!.Impersonate,"Blocked download was not retried with impersonation: "+job.Error);
+});
 await CheckAsync("an existing destination is preserved",async()=>{
     var job=Job("collision");File.WriteAllText(job.Destination,"existing");await pipelineFake.DownloadAsync(job,null,CancellationToken.None);
     Require(job.State==DownloadState.Failed&&File.ReadAllText(job.Destination)=="existing","Existing file overwritten");
@@ -202,10 +224,13 @@ sealed class LoggingRunner:IMediaProcessRunner
 }
 sealed class FakeRunner:IMediaProcessRunner
 {
- public List<ProcessStartInfo> Calls{get;}=[];public bool MissingAudio,Cancel,BadProbe;public int ProbeExit;public CancellationTokenSource? CancelSource;public string ResultExtension="mp4";
+ public List<ProcessStartInfo> Calls{get;}=[];public bool MissingAudio,Cancel,BadProbe,Av1,Block403;public int ProbeExit;public CancellationTokenSource? CancelSource;public string ResultExtension="mp4";
  public Task<MediaProcessResult> RunAsync(ProcessStartInfo start,Action<string>? line,CancellationToken token)
  {
   Calls.Add(start);
+  if(start.FileName.EndsWith("ffmpeg.exe")){File.WriteAllText(start.ArgumentList[^1],"exact cut fixture");line?.Invoke("out_time_us=4000000");return Task.FromResult(new MediaProcessResult(0,"",""));}
+  if(start.FileName.EndsWith("ffprobe.exe")&&start.ArgumentList.Any(a=>a.Contains("codec_name")))return Task.FromResult(new MediaProcessResult(0,Av1?"{\"streams\":[{\"codec_type\":\"video\",\"codec_name\":\"av1\"}],\"format\":{\"duration\":\"8.3\"}}":"{\"streams\":[{\"codec_type\":\"video\",\"codec_name\":\"h264\",\"bit_rate\":\"2000000\"},{\"codec_type\":\"audio\"}],\"format\":{\"duration\":\"8.3\"}}",""));
+  if(Block403&&start.FileName.EndsWith("yt-dlp.exe")&&!start.ArgumentList.Contains("--impersonate"))return Task.FromResult(new MediaProcessResult(1,"","ERROR: [generic] Unable to download webpage: HTTP Error 403: Forbidden"));
   if(start.FileName.EndsWith("ffprobe.exe"))return Task.FromResult(new MediaProcessResult(ProbeExit,BadProbe?"{\"streams\":[{}]}":MissingAudio?"{\"streams\":[{\"codec_type\":\"video\"}]}":"{\"streams\":[{\"codec_type\":\"video\"},{\"codec_type\":\"audio\"}]}",BadProbe?"Invalid media header":""));
   int index=start.ArgumentList.IndexOf("--output");string output=start.ArgumentList[index+1].Replace("%(ext)s",ResultExtension);Directory.CreateDirectory(Path.GetDirectoryName(output)!);
   line?.Invoke("APEXFORMAT:\"137+140\"");

@@ -50,6 +50,8 @@ await Check("typed video requests validate format IDs and supported page URLs", 
     Require(Protocol.Validate(request with { Url="https://cdn.test/hls/master.m3u8" })==null,"An HLS stream was rejected.");
     Require(Protocol.Validate(request with { Url="https://vimeo.com/76979871" })==null,"A known video site was rejected.");
     Require(Protocol.Validate(new BridgeRequest("video-formats","https://example.test/page"))==null,"Generic page search rejected.");
+    Require(Protocol.Validate(new BridgeRequest("download","magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=x",RequestId:Guid.NewGuid().ToString()))==null,"A magnet link from the browser was rejected.");
+    Require(Protocol.Validate(new BridgeRequest("download","magnet:?xt=urn:btih:nothash",RequestId:Guid.NewGuid().ToString()))!=null,"An invalid magnet link was accepted.");
     selected.FormatId="--exec"; Require(Protocol.Validate(request)!=null,"Unsafe format accepted.");
     Require(Protocol.Validate(new("video-formats","https://www.youtube.com/watch?v=jNQXAC9IVRw"))==null,"Format discovery action rejected.");
     return Task.CompletedTask;

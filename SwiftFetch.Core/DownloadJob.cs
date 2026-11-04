@@ -7,6 +7,11 @@ public sealed class DownloadJob
     public string Url { get; set; } = "";
     public string? BrowserRequestId { get; set; }
     public VideoSelection? Video { get; set; }
+    public TorrentSelection? Torrent { get; set; }
+    [JsonIgnore] public int TorrentPeers { get; set; }
+    [JsonIgnore] public int TorrentSeeders { get; set; }
+    /// <summary>Video and torrent jobs count bytes themselves; ordinary downloads count segment files.</summary>
+    [JsonIgnore] public bool UsesMediaBytes => Video != null || Torrent != null;
     public string? MediaWorkDirectory { get; set; }
     public long MediaDownloadedBytes { get; set; }
     public Dictionary<string,long> MediaTrackBytes { get; set; } = [];
@@ -15,9 +20,13 @@ public sealed class DownloadJob
     public HashSet<string> MediaTrackEstimates { get; set; } = [];
     public List<string> MediaTracks { get; set; } = [];
     [JsonIgnore] public string? MediaActiveTrack { get; set; }
+    /// <summary>The finishing stage after the transfer (joining, saving), shown as a second progress bar. Null fraction = indeterminate.</summary>
+    [JsonIgnore] public string? PhaseText { get; set; }
+    [JsonIgnore] public double? PhaseFraction { get; set; }
     [JsonIgnore] public DownloadSession? Session { get; set; }
     [JsonIgnore] public object SegmentGate { get; } = new();
     public int DynamicSplits { get; set; }
+    [JsonIgnore] public bool LearnedSingleConnection { get; set; }
     public string Destination { get; set; } = "";
     public bool NameIsCustom { get; set; }
     [JsonIgnore] public DownloadState State { get; set; } = DownloadState.Ready;

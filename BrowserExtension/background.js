@@ -2,7 +2,8 @@ import { installMedia } from "./media-background.js";
 installMedia(chrome);
 import { shouldCapture } from "./capture-policy.js";
 import { captureDownload, directUrl, recoverHandoffs, sendNative, statusStorage } from "./transfer.js";
-import { downloadSession } from "./session.js";
+import { downloadSession, installHeaderCapture } from "./session.js";
+installHeaderCapture(chrome);
 
 const recovery = recoverHandoffs(chrome).catch(console.error);
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
@@ -15,6 +16,15 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   if (sender.id !== chrome.runtime.id || !sender.tab) return;
   if (message.action === "capture-policy") {
     refreshPolicy().then(async () => reply({ ok: true, policy: (await chrome.storage.local.get("capturePolicy")).capturePolicy || {} })).catch(() => reply({ ok: false }));
+    return true;
+  }
+  if (message.action === "magnet") {
+    (async () => {
+      const { captureEnabled = true } = await chrome.storage.local.get("captureEnabled");
+      if (!captureEnabled || !/^magnet:\?(.*&)?xt=urn:btih:/i.test(message.url || "") || message.url.length > 8192) return { ok: false };
+      await sendNative(chrome, { action: "download", url: message.url, requestId: crypto.randomUUID() });
+      return { ok: true };
+    })().then(reply).catch(() => reply({ ok: false }));
     return true;
   }
   if (message.action !== "direct-click" || !directUrl(message.url)) return;

@@ -100,7 +100,7 @@ public partial class DownloadProgressDialog : Window
         // Tab 1: Download status
         StatusVal.Text = row.DisplayStatus;
         FileSizeVal.Text = row.TotalSizeText;
-        DownloadedVal.Text = $"{Format(job.Video != null ? job.MediaDownloadedBytes : job.TotalBytes.HasValue ? Math.Min(job.TotalBytes.Value, job.Segments.Sum(s => s.WrittenBytes)) : job.Segments.Sum(s => s.WrittenBytes))} ({percentStr})";
+        DownloadedVal.Text = $"{Format(job.UsesMediaBytes ? job.MediaDownloadedBytes : job.TotalBytes.HasValue ? Math.Min(job.TotalBytes.Value, job.Segments.Sum(s => s.WrittenBytes)) : job.Segments.Sum(s => s.WrittenBytes))} ({percentStr})";
         TransferRateVal.Text = row.SpeedText;
         LimiterRateVal.Text = row.SpeedText;
         TimeLeftVal.Text = row.EtaText;
@@ -110,6 +110,15 @@ public partial class DownloadProgressDialog : Window
         // Overall progress bar
         OverallProgressBar.Value = row.Percent;
         OverallProgressBar.IsIndeterminate = row.Indeterminate;
+        if (job.PhaseText is { } phase)
+        {
+            PhasePanel.Visibility = Visibility.Visible;
+            PhaseLabel.Text = phase + "…";
+            PhaseBar.IsIndeterminate = job.PhaseFraction == null;
+            if (job.PhaseFraction is double fraction) PhaseBar.Value = fraction;
+            PhasePercent.Text = job.PhaseFraction is double done ? done.ToString("P0") : "";
+        }
+        else PhasePanel.Visibility = Visibility.Collapsed;
 
         // Pause/Resume button text
         PauseButton.Content = row.CanPause ? "Pause" : "Resume";
@@ -120,7 +129,14 @@ public partial class DownloadProgressDialog : Window
         // Update connection rows
         lock (job.SegmentGate)
         {
-            if (job.Video != null)
+            if (job.Torrent != null)
+            {
+                while (connections.Count < 1) connections.Add(new ConnectionViewModel { Number = connections.Count + 1 });
+                while (connections.Count > 1) connections.RemoveAt(connections.Count - 1);
+                connections[0].DownloadedText = Format(job.MediaDownloadedBytes);
+                connections[0].InfoText = job.State == DownloadState.Downloading ? $"{job.TorrentPeers} peers · {job.TorrentSeeders} seeders" : job.ResumeNote;
+            }
+            else if (job.Video != null)
             {
                 var tracks = VideoTools.Tracks(job);
                 while (connections.Count < tracks.Count) connections.Add(new ConnectionViewModel { Number = connections.Count + 1 });

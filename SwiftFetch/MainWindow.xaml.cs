@@ -129,7 +129,8 @@ public partial class MainWindow : Window
         {
             if (!Clipboard.ContainsText()) return;
             string text = Clipboard.GetText().Trim();
-            if (string.IsNullOrEmpty(text) || text == lastClipboardUrl || text.Length > 2048) return;
+            if (string.IsNullOrEmpty(text) || text == lastClipboardUrl || text.Length > 8192) return;
+            if (Torrents.MagnetHash(text) != null) { lastClipboardUrl = text; MessageText.Text = "Clipboard magnet link detected."; _ = OpenTorrentAsync(text); return; }
             if (Uri.TryCreate(text, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https") && string.IsNullOrEmpty(uri.UserInfo))
             {
                 lastClipboardUrl = text;
@@ -244,6 +245,11 @@ public partial class MainWindow : Window
         }
         var existing = Downloads.FirstOrDefault(row => row.Job.BrowserRequestId == request.RequestId);
         if (existing != null) return new(true, JobId: existing.Job.Id);
+        if (Torrents.MagnetHash(request.Url) != null)
+        {
+            Dispatcher.BeginInvoke(async () => await OpenTorrentAsync(request.Url!));
+            return new(true);
+        }
         try
         {
             bool confirm = showWindow && settings.ShowStartDownloadDialog;
@@ -319,10 +325,10 @@ public partial class MainWindow : Window
         });
     }
 
-    private DownloadRow Enqueue(Uri uri, string? suggestedName = null, string? requestId = null, bool startNow = true, string? expectedSha256 = null, DownloadSession? session = null, string? explicitDestination = null, string? explicitCategory = null, bool? nameIsCustom = null, long? knownTotalBytes = null, string queue = "Default", VideoSelection? video = null)
+    private DownloadRow Enqueue(Uri uri, string? suggestedName = null, string? requestId = null, bool startNow = true, string? expectedSha256 = null, DownloadSession? session = null, string? explicitDestination = null, string? explicitCategory = null, bool? nameIsCustom = null, long? knownTotalBytes = null, string queue = "Default", VideoSelection? video = null, TorrentSelection? torrent = null)
     {
         if (!persistenceAvailable) throw new IOException("Download history is unavailable. Recover history.json or its backup before adding downloads.");
-        var duplicate = Downloads.FirstOrDefault(row => row.Job.Url == uri.AbsoluteUri && row.Job.Video?.FormatId == video?.FormatId);
+        var duplicate = Downloads.FirstOrDefault(row => row.Job.Url == uri.AbsoluteUri && row.Job.Video?.FormatId == video?.FormatId && row.Job.Video?.ClipStart == video?.ClipStart && row.Job.Video?.ClipEnd == video?.ClipEnd && (torrent == null || row.Job.Torrent != null));
         if (duplicate != null && (settings.DuplicatePolicy == "Use existing" || settings.DuplicatePolicy == "Ask" && MessageBox.Show(this, "This link is already in the list. Use its existing entry?", "Duplicate download", MessageBoxButton.YesNo) == MessageBoxResult.Yes)) { if (startNow && duplicate.CanResume) { duplicate.Job.Queue = "Default"; Start(duplicate); } return duplicate; }
         session ??= settings.ManualSession(uri);
         if (!string.IsNullOrEmpty(expectedSha256) && (expectedSha256.Length != 64 || expectedSha256.Any(c => !Uri.IsHexDigit(c)))) throw new ArgumentException("SHA-256 must contain 64 hexadecimal characters, or leave it empty.");
@@ -357,6 +363,7 @@ public partial class MainWindow : Window
         {
             Url = uri.AbsoluteUri,
             Video = video,
+            Torrent = torrent,
             VideoSizeEstimated = video?.Approximate == true,
             Destination = destination,
             BrowserRequestId = requestId,
@@ -431,7 +438,12 @@ public partial class MainWindow : Window
             row.Update(p);
             if (!string.IsNullOrEmpty(job.ResumeNote)) MessageText.Text = job.FileName + ": " + job.ResumeNote;
         });
-        if (job.Video != null)
+        if (job.Torrent != null)
+        {
+            await CreateTorrentTools().DownloadAsync(job, progress, token,
+                settings.GlobalSpeedLimitBytes > 0 ? Math.Max(1,settings.GlobalSpeedLimitBytes / Math.Max(1,scheduler.ActiveCount)) : 0);
+        }
+        else if (job.Video != null)
         {
             await CreateVideoTools().DownloadAsync(job,progress,token,
                 () => { if (!SaveHistory()) throw new IOException("Could not save the video checkpoint."); },
@@ -446,6 +458,8 @@ public partial class MainWindow : Window
         }, () => { if (!SaveHistory()) throw new IOException("Could not save segment checkpoints. Download stopped to preserve recovery state."); });
         row.Stop();
         row.Refresh();
+        // A site that only worked after dropping to one connection starts that way next time.
+        if (job.LearnedSingleConnection && job.State == DownloadState.Completed && Uri.TryCreate(job.Url, UriKind.Absolute, out var learned)) engine.Options.Learn(learned, 1);
         if (row.Job.ErrorKind != DownloadErrorKind.None) { MessageText.Text = row.FileName + ": " + row.Job.Error; if (settings.PlayErrorSound) System.Media.SystemSounds.Hand.Play(); }
         else if (row.Job.Status == "Completed")
         {
@@ -557,6 +571,7 @@ public partial class MainWindow : Window
         if (!await IndependentDialogs.ShowAsync(addDialog) || closing) return;
 
         string raw = addDialog.Url.Trim();
+        if (Torrents.MagnetHash(raw) != null) { await OpenTorrentAsync(raw); return; }
         List<string> urls;
         try { urls = BatchUrlExpander.Expand(raw); }
         catch (ArgumentException error) { MessageText.Text = error.Message; return; }
@@ -920,19 +935,20 @@ public sealed class DownloadRow : INotifyPropertyChanged
         }
     };
     public string PercentText => Job.Status == "Completed" ? "100%" : latest.Total is > 0 ? $"{Percent:0}%" : "…";
-    public string DisplayStatus => Job.Status == "Completed" && !File.Exists(Job.Destination) ? "File missing" : Job.State == DownloadState.Completed && Job.IntegrityVerified ? "Verified" : Job.State == DownloadState.Retrying ? "Retry " + Job.RetriesPerformed : Job.Status == "Completed" ? "Complete" : Job.Status;
+    private bool Exists => File.Exists(Job.Destination) || Job.Torrent != null && Directory.Exists(Job.Destination);
+    public string DisplayStatus => Job.Status == "Completed" && !Exists ? "File missing" : Job.State == DownloadState.Completed && Job.IntegrityVerified ? "Verified" : Job.State == DownloadState.Retrying ? "Retry " + Job.RetriesPerformed : Job.Status == "Completed" ? "Complete" : Job.Status;
     public string StatusColor => Theme(DisplayStatus switch { "Complete" or "Completed" or "Verified" => "StatusGood", "Failed" or "AuthRequired" or "ExpiredUrl" or "NoDiskSpace" => "StatusBad", "Paused" or "File missing" or "Queued" => "StatusWarn", _ => "Accent" });
     // Status colors follow the palette and the dark/light mode (set in MainWindow.ApplyTheme).
     private static string Theme(string key) => (Application.Current?.TryFindResource(key) as System.Windows.Media.SolidColorBrush)?.Color.ToString() ?? "#38BDF8";
     public string Status => Job.Status;
     public bool CanPause => Job.State is DownloadState.Queued or DownloadState.Connecting or DownloadState.Resolving or DownloadState.Downloading or DownloadState.Retrying or DownloadState.Verifying or DownloadState.Finishing;
     public bool CanResume => Job.State is DownloadState.Paused or DownloadState.Failed or DownloadState.Ready or DownloadState.AuthRequired or DownloadState.ExpiredUrl or DownloadState.NoDiskSpace;
-    public bool CanOpen => Job.Status == "Completed" && File.Exists(Job.Destination);
+    public bool CanOpen => Job.Status == "Completed" && Exists;
     public bool CanRename => !CanPause && DisplayStatus != "File missing";
     public bool CanEditSession => CanResume;
     public bool CanRemove => !CanPause;
     public bool CanShowFolder => true;
-    public int Connections => Job.Video != null ? (Job.State == DownloadState.Downloading ? 1 : 0) : Job.Segments.Count;
+    public int Connections => Job.Torrent != null ? Job.TorrentPeers : Job.Video != null ? (Job.State == DownloadState.Downloading ? 1 : 0) : Job.Segments.Count;
     public double Percent => latest.Total is > 0 ? Math.Clamp(100.0 * latest.Bytes / latest.Total.Value, 0, 100) : Job.Status == "Completed" ? 100 : 0;
     public bool Indeterminate => latest.Total == null && Job.Status is "Connecting" or "Downloading";
     public string SizeText => Format(latest.Bytes) + (latest.Total is long total ? " / " + Format(total) : " / unknown size");
@@ -943,7 +959,7 @@ public sealed class DownloadRow : INotifyPropertyChanged
     public void Stop() { transferRate.Reset(); latest = latest with { BytesPerSecond = 0 }; Notify(); }
     public void Refresh()
     {
-        long bytes = Job.Status == "Completed" ? Job.TotalBytes ?? (File.Exists(Job.Destination) ? new FileInfo(Job.Destination).Length : 0) : Job.Video != null ? Job.MediaDownloadedBytes : Enumerable.Range(0, Job.Segments.Count).Sum(i => File.Exists(Job.PartPath(i)) ? new FileInfo(Job.PartPath(i)).Length : 0);
+        long bytes = Job.Status == "Completed" ? Job.TotalBytes ?? (File.Exists(Job.Destination) ? new FileInfo(Job.Destination).Length : 0) : Job.UsesMediaBytes ? Job.MediaDownloadedBytes : Enumerable.Range(0, Job.Segments.Count).Sum(i => File.Exists(Job.PartPath(i)) ? new FileInfo(Job.PartPath(i)).Length : 0);
         latest = latest with { Bytes = bytes, Total = Job.TotalBytes };
         Notify();
     }
