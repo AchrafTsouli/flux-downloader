@@ -49,7 +49,12 @@ public sealed class DownloadSettings
     public bool DarkMode { get; set; } = true;
     public bool ShowTrayIcon { get; set; } = true;
     public string Language { get; set; } = "en";
+    // Empty means the official Flux releases; a custom HTTPS feed can still be set in Options.
+    public const string ProjectPage = "https://github.com/AchrafTsouli/flux-downloader";
+    public const string DefaultUpdateFeed = ProjectPage + "/releases/latest/download/version.json";
     public string UpdateFeedUrl { get; set; } = "";
+    [System.Text.Json.Serialization.JsonIgnore] public string EffectiveUpdateFeed => UpdateFeedUrl.Length > 0 ? UpdateFeedUrl : DefaultUpdateFeed;
+    [System.Text.Json.Serialization.JsonIgnore] public string EffectiveHomePage => HomePageUrl.Length > 0 ? HomePageUrl : ProjectPage;
     public bool AutoCheckUpdates { get; set; } = true;
     public bool AutoUpdateVideoTools { get; set; } = true;
     public DateTimeOffset? LastUpdateCheck { get; set; }

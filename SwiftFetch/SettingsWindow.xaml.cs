@@ -97,8 +97,8 @@ public partial class SettingsWindow : Window
         var appearance = Page("View", "Appearance");
         Toggle(appearance, "Show categories", nameof(Result.ShowCategories)); Toggle(appearance, "Show toolbar", nameof(Result.ShowToolbar));
         Field(appearance, "Font family", nameof(Result.FontFamily)); Field(appearance, "Font size (9–24)", nameof(Result.FontSize));
-        Field(appearance, "Project home page URL (optional)", nameof(Result.HomePageUrl));
-        Field(appearance, "Update feed URL (optional HTTPS JSON)", nameof(Result.UpdateFeedUrl));
+        Field(appearance, "Project home page URL (empty = Flux on GitHub)", nameof(Result.HomePageUrl));
+        Field(appearance, "Update feed URL (empty = official Flux releases on GitHub)", nameof(Result.UpdateFeedUrl));
         Toggle(appearance, "Check the update feed daily", nameof(Result.AutoCheckUpdates));
         Toggle(appearance, "Keep the video downloader (yt-dlp) updated daily from its GitHub releases", nameof(Result.AutoUpdateVideoTools));
         Note(appearance, "Update feed: version.json made by scripts/Sign-Release.ps1 — {\"version\",\"url\",\"sha256\",\"signature\"}. Signed releases install after you confirm; unsigned feeds only open the download page. yt-dlp updates are checked against the release's SHA-256 list and kept in %LOCALAPPDATA%\\SwiftFetch\\tools.");

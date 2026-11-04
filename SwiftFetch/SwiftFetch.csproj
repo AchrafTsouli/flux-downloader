@@ -4,7 +4,7 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <AssemblyName>SwiftFetch</AssemblyName>
-    <Version>0.9.2</Version>
+    <Version>0.9.3</Version>
     <Product>Flux</Product>
     <AssemblyTitle>Flux</AssemblyTitle>
     <Company>Flux</Company>

@@ -4,5 +4,5 @@ namespace SwiftFetch.Core;
 // stays outside the repository and is used by scripts/Sign-Release.ps1 to sign version.json.
 internal static class UpdateSigningKey
 {
-    public const string PublicKey = "";
+    public const string PublicKey = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEr4A5xVXDDg3DgMK352ttyolZka2KjRdAOzMP3Ng4S/gfjQ1lnLgg7LQWpg3HdgPFevqIJx7QHQpliiVZ3enskQ==";
 }

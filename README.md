@@ -4,7 +4,7 @@
 
 <p align="center">A fast, free download manager for Windows, with browser capture and video downloads.<br>No ads, no trial timer, no account.</p>
 
-<p align="center"><a href="https://github.com/OWNER/flux-downloader/releases/latest"><b>Download the latest installer</b></a></p>
+<p align="center"><a href="https://github.com/AchrafTsouli/flux-downloader/releases/latest"><b>Download the latest installer</b></a></p>
 
 ## Features
 
@@ -19,7 +19,7 @@
 
 ## Install
 
-1. Download `Flux-Setup-<version>-win-x64.exe` from [Releases](https://github.com/OWNER/flux-downloader/releases/latest) and run it. It needs Windows 10 22H2 or Windows 11 (64-bit) and no administrator rights. Everything it needs, including the .NET runtime and the video tools, is inside the installer.
+1. Download `Flux-Setup-<version>-win-x64.exe` from [Releases](https://github.com/AchrafTsouli/flux-downloader/releases/latest) and run it. It needs Windows 10 22H2 or Windows 11 (64-bit) and no administrator rights. Everything it needs, including the .NET runtime and the video tools, is inside the installer.
 2. Keep **Connect Flux to Chrome and Brave** ticked.
 3. In `chrome://extensions` (or `edge://extensions`, `brave://extensions`), turn on **Developer mode**, choose **Load unpacked** and select the `BrowserExtension` folder in the Flux installation folder. The setup page the installer opens shows the exact path.
 4. Click the Flux toolbar icon, then **Test connection**.
@@ -31,7 +31,7 @@ Windows SmartScreen may warn about the installer because it is not code-signed y
 Requirements: Windows, the [.NET 10 SDK](https://dotnet.microsoft.com/download), [PowerShell 7.4+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) and Node.js (for the extension tests).
 
 ```powershell
-git clone https://github.com/OWNER/flux-downloader.git
+git clone https://github.com/AchrafTsouli/flux-downloader.git
 cd flux-downloader
 pwsh scripts/Get-VideoTools.ps1        # restores yt-dlp, FFmpeg and QuickJS, verified against video-tools/sources.json
 dotnet run --project SwiftFetch/SwiftFetch.csproj
@@ -68,6 +68,10 @@ Installed copies check `releases/latest/download/version.json` once a day and of
 | `docs/` | Design notes and [development history](docs/HISTORY.md) |
 
 The internal project names (`SwiftFetch`) date from before the rename and are kept so existing installations upgrade cleanly.
+
+## License
+
+Flux is released under the [MIT License](LICENSE): anyone may use, modify and redistribute it.
 
 ## Third-party components
 

@@ -12,19 +12,12 @@ public partial class MainWindow
 
     private void HomePage_Click(object sender, RoutedEventArgs e)
     {
-        if (Uri.TryCreate(settings.HomePageUrl,UriKind.Absolute,out var url) && url.Scheme is "https" or "http" && url.UserInfo.Length == 0) { Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true }); return; }
+        if (Uri.TryCreate(settings.EffectiveHomePage,UriKind.Absolute,out var url) && url.Scheme is "https" or "http" && url.UserInfo.Length == 0) { Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true }); return; }
         MessageBox.Show(this,$"Flux {CurrentVersion} is a local project. Configure its home page in Options → View when you publish it. The project documentation is in the docs folder.","Flux project information");
     }
 
     private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
-        if (settings.UpdateFeedUrl.Length == 0)
-        {
-            var dialog = new TextEntryDialog("Update feed", "No update service is configured. Enter the HTTPS address of your release's version.json (for example a GitHub \"latest release\" download link).") { Owner = this };
-            if (dialog.ShowDialog() != true || dialog.Value.Trim().Length == 0) return;
-            if (!Uri.TryCreate(dialog.Value.Trim(),UriKind.Absolute,out var candidate) || candidate.Scheme != "https" || candidate.UserInfo.Length > 0) { MessageText.Text = "Use an HTTPS feed without embedded credentials."; return; }
-            settings.UpdateFeedUrl = candidate.AbsoluteUri; SaveHistory();
-        }
         await CheckForUpdatesAsync(interactive: true);
         await UpdateVideoToolsAsync(interactive: true);
     }
@@ -34,7 +27,7 @@ public partial class MainWindow
     {
         var now = DateTimeOffset.UtcNow;
         if (settings.AutoUpdateVideoTools && (settings.LastVideoToolsCheck == null || now - settings.LastVideoToolsCheck > TimeSpan.FromHours(24))) await UpdateVideoToolsAsync(interactive: false);
-        if (settings.AutoCheckUpdates && settings.UpdateFeedUrl.Length > 0 && (settings.LastUpdateCheck == null || now - settings.LastUpdateCheck > TimeSpan.FromHours(24))) await CheckForUpdatesAsync(interactive: false);
+        if (settings.AutoCheckUpdates && (settings.LastUpdateCheck == null || now - settings.LastUpdateCheck > TimeSpan.FromHours(24))) await CheckForUpdatesAsync(interactive: false);
     }
 
     private async Task UpdateVideoToolsAsync(bool interactive)
@@ -54,7 +47,7 @@ public partial class MainWindow
 
     private async Task CheckForUpdatesAsync(bool interactive)
     {
-        if (checkingUpdates || settings.UpdateFeedUrl.Length == 0) return;
+        if (checkingUpdates) return;
         checkingUpdates = true;
         try
         {
@@ -87,7 +80,7 @@ public partial class MainWindow
 
     private async Task<byte[]> BoundedFeedAsync(CancellationToken token)
     {
-        using var response = await updateClient.GetAsync(settings.UpdateFeedUrl,HttpCompletionOption.ResponseHeadersRead,token); response.EnsureSuccessStatusCode();
+        using var response = await updateClient.GetAsync(settings.EffectiveUpdateFeed,HttpCompletionOption.ResponseHeadersRead,token); response.EnsureSuccessStatusCode();
         await using var stream = await response.Content.ReadAsStreamAsync(token); using var memory = new MemoryStream(); byte[] buffer = new byte[8192];
         while (await stream.ReadAsync(buffer,token) is int count and > 0) { if (memory.Length + count > 65536) throw new InvalidDataException("Update feed is too large."); memory.Write(buffer,0,count); }
         return memory.ToArray();

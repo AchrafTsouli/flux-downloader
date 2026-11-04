@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Flux Integration",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "incognito": "split",
   "description": "Capture downloads and download detected videos with Flux.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuP2jnMVrRI3Mw+VESaieXFqr98r+iCsN+Q28RLRlZJj8nHzt3mTDTEbVgXcMAAbr0c/XHomavzSzXssozROkRK8Xo3TMWhlTtPJuLp2ruYuNMZ7wRUz1qy6XLrH7vNLI0IfF/LyCWRJsjP54G01n7X6RlQDrHv5uD9+yhfaf14MTu5DvY1tmQVx/Xw00L2gnmONbMftpgmGWosIF7C580qcQy+McOTSdYDlN8z643fGpehJdKNCU9SoD9CVrEdUt/SgFeUzmOG9bpEquJ8cXUQbix3gjoVM0ARNfpMnPFv63mIi+41DpCWE1XiOdqFz3zAVUTqq30wXL4+9ZlBBudwIDAQAB",
