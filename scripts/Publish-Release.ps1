@@ -26,6 +26,6 @@ try {
   git tag $tag; git push origin $tag
   $notesArgs = if ($Notes) { @('--notes', $Notes) } else { @('--generate-notes') }
   gh release create $tag $installer "$installer.sha256" $feed --title "Flux $version" @notesArgs
-  Write-Output "Published $tag: https://github.com/$repo/releases/tag/$tag"
+  Write-Output "Published ${tag}: https://github.com/$repo/releases/tag/$tag"
 }
 finally { Pop-Location }
