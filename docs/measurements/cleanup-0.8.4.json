@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-10-16T09:37:38.9669984Z",
+  "workspaceBytesBefore": 2864470717.0,
+  "workspaceBytesAfter": 198162446.0,
+  "removedBytes": 2666308271.0,
+  "preserved": [
+    "source",
+    "tests",
+    "documentation",
+    "dist",
+    "video-tools",
+    "installers/0.8.4",
+    ".tools/InnoSetup registered compiler",
+    "Downloads and real history"
+  ],
+  "targets": [
+    {
+      "path": ".tools/media-build",
+      "removedBytes": 1325002940,
+      "status": "removed"
+    },
+    {
+      "path": ".tools/compact-video",
+      "removedBytes": 94775424,
+      "status": "removed"
+    },
+    {
+      "path": ".dotnet-home",
+      "removedBytes": 383525177,
+      "status": "removed"
+    },
+    {
+      "path": ".test-tmp",
+      "removedBytes": 3626877,
+      "status": "removed"
+    },
+    {
+      "path": "artifacts",
+      "removedBytes": 287679431,
+      "status": "removed"
+    },
+    {
+      "path": "installers/ApexDownloader-Setup-0.8.3-win-x64.exe",
+      "removedBytes": 206040480,
+      "status": "removed"
+    },
+    {
+      "path": "installers/ApexDownloader-Setup-0.8.3-win-x64.exe.sha256",
+      "removedBytes": 106,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch/bin",
+      "removedBytes": 176186890,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch/obj",
+      "removedBytes": 11985658,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.Core/bin",
+      "removedBytes": 251376,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.Core/obj",
+      "removedBytes": 425299,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.Bridge/bin",
+      "removedBytes": 293756,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.Bridge/obj",
+      "removedBytes": 164566,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.NativeHost/bin",
+      "removedBytes": 34733784,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.NativeHost/obj",
+      "removedBytes": 323787,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.Tests/bin",
+      "removedBytes": 34827246,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.Tests/obj",
+      "removedBytes": 473426,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.MediaTests/bin",
+      "removedBytes": 34720221,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.MediaTests/obj",
+      "removedBytes": 331405,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.BridgeTests/bin",
+      "removedBytes": 34754915,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.BridgeTests/obj",
+      "removedBytes": 346882,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.UiSmoke/bin",
+      "removedBytes": 35367484,
+      "status": "removed"
+    },
+    {
+      "path": "SwiftFetch.UiSmoke/obj",
+      "removedBytes": 471141,
+      "status": "removed"
+    }
+  ]
+}

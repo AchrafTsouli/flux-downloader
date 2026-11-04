@@ -1,0 +1,107 @@
+[
+  {
+    "path": ".test-tmp",
+    "removedBytes": 163953630,
+    "status": "removed"
+  },
+  {
+    "path": "video-tools\\packages",
+    "removedBytes": 752987754,
+    "status": "removed"
+  },
+  {
+    "path": "scripts\\__pycache__",
+    "removedBytes": 3324,
+    "status": "removed"
+  },
+  {
+    "path": ".dotnet-home\\.dotnet\\TelemetryStorageService",
+    "removedBytes": 16788,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch\\bin",
+    "removedBytes": 70209850,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch\\obj",
+    "removedBytes": 2074838,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Bridge\\bin",
+    "removedBytes": 599856,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Bridge\\obj",
+    "removedBytes": 237604,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.BridgeTests\\bin",
+    "removedBytes": 34775703,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.BridgeTests\\obj",
+    "removedBytes": 345868,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Core\\bin",
+    "removedBytes": 525736,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Core\\obj",
+    "removedBytes": 812217,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.MediaTests\\bin",
+    "removedBytes": 34738965,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.MediaTests\\obj",
+    "removedBytes": 325454,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.NativeHost\\bin",
+    "removedBytes": 34732836,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.NativeHost\\obj",
+    "removedBytes": 329796,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Tests\\bin",
+    "removedBytes": 69544388,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Tests\\obj",
+    "removedBytes": 802770,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.UiSmoke\\bin",
+    "removedBytes": 35379656,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.UiSmoke\\obj",
+    "removedBytes": 474699,
+    "status": "removed"
+  },
+  {
+    "path": "ui-preview.png",
+    "removedBytes": 114576,
+    "status": "removed"
+  }
+]

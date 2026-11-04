@@ -1,0 +1,21 @@
+const{chromium}=require(process.env.APEX_PLAYWRIGHT_MODULE || 'playwright');
+const path=require('path'),assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});try{
+ const page=await browser.newPage({viewport:{width:1050,height:700}});
+ await page.setContent('<title>Example video</title><body style="background:#181d1a;color:white;font:16px Segoe UI"><main style="margin:45px auto;width:900px"><h2>Flux video qualities</h2><video style="width:900px;height:500px;background:#26352e" controls></video></main>');
+ await page.evaluate(()=>{const attach=Element.prototype.attachShadow;Element.prototype.attachShadow=function(o){return attach.call(this,{...o,mode:'open'})};window.sent=[];window.formatRequests=0;window.chrome={storage:{local:{async get(){return{captureEnabled:true,videoPanelEnabled:true}}},onChanged:{addListener(){}}},runtime:{async sendMessage(m){if(m.action==='media-list')return{ok:true,items:[],videoPage:'https://www.youtube.com/watch?v=jNQXAC9IVRw'};if(m.action==='video-formats'){window.formatRequests++;await new Promise(r=>setTimeout(r,500));return{ok:true,video:{title:'Example video',formats:[{formatId:'137+140',label:'MP4 · 1080p · 60 fps · video + audio',extension:'mp4',totalBytes:90000000,approximate:true},{formatId:'18',label:'MP4 · 360p · video + audio',extension:'mp4',totalBytes:null,approximate:false}]}};}sent.push(m);return{ok:true}}}}});
+ await page.addScriptTag({path:path.resolve('BrowserExtension/media-policy.js')});await page.addScriptTag({path:path.resolve('BrowserExtension/video-panel.js')});
+ await page.waitForFunction(()=>window.formatRequests===1);
+ await page.getByRole('button',{name:/1080p/,includeHidden:true}).waitFor({state:'attached'});
+ const clickAt=Date.now();
+ await page.getByRole('button',{name:'Download this video'}).click();
+ await page.getByRole('button',{name:/1080p/}).waitFor();
+ assert.ok(Date.now()-clickAt<300,'Cached menu did not open promptly');
+ assert.equal(await page.evaluate(()=>window.formatRequests),1,'Click triggered a second extraction');
+ console.log('PASS prefetched menu opens in '+(Date.now()-clickAt)+' ms without extracting on click');
+ await page.screenshot({path:'.test-tmp/video-qualities-prefetched.png'});
+ await page.getByRole('button',{name:/1080p/}).click();
+ await page.getByRole('status').filter({hasText:'Video sent to Flux.'}).waitFor();
+ assert.equal(await page.evaluate(()=>sent[0].action),'video-download');assert.equal(await page.evaluate(()=>sent[0].formatId),'137+140');
+ console.log('PASS rendered quality list, frame rate, estimated/unknown size and selected video/audio handoff.');
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flux — Chrome / Brave setup</title>
+<style>
+body{font:16px/1.65 system-ui,sans-serif;background:#191d23;color:#ecf1f7;max-width:800px;margin:60px auto;padding:0 24px}h1{line-height:1.2}h2{margin-top:36px;font-size:20px}code,input{background:#101318;color:#8be1bd;border:1px solid #475362;border-radius:5px;padding:8px}input{box-sizing:border-box;width:100%;font-size:14px}button{background:#8be1bd;color:#101318;border:0;border-radius:5px;padding:10px 16px;margin-top:10px;cursor:pointer}li{margin:10px 0}small{color:#b5bfcc}#status{margin-left:12px}
+</style>
+<h1>Connect Flux to Chrome / Brave</h1>
+<p>Flux is installed. One browser step remains to enable download capture and the video panel.</p>
+<ol><li>Open <code>chrome://extensions</code> or <code>brave://extensions</code> in your browser.</li>
+<li>Enable <strong>Developer mode</strong>, then click <strong>Load unpacked</strong>.</li>
+<li>Select this folder:</li></ol>
+<input id="folder" readonly aria-label="Browser extension folder"><button id="copy">Copy folder path</button><span id="status" role="status"></span>
+<ol start="4"><li>Pin <strong>Flux Integration</strong>. Open its popup and check the connection. Enable the video panel there if needed.</li>
+<li>Refresh existing video tabs. When you update Flux, click the extension's reload button and refresh those tabs again.</li></ol>
+<p><small>The native bridge is registered by the installer when the Chrome/Brave option is selected. This extension is distributed locally and is not yet in the Chrome Web Store.</small></p>
+<h2>Configuration en français</h2>
+<p>Ouvrez la page des extensions, activez le <strong>Mode développeur</strong>, cliquez sur <strong>Charger l'extension non empaquetée</strong>, puis sélectionnez le dossier ci-dessus. Vérifiez la connexion dans le popup Flux et actualisez vos onglets vidéo.</p>
+<script>
+const folder=document.querySelector('#folder'), status=document.querySelector('#status');
+let path=decodeURIComponent(new URL('BrowserExtension/',location.href).pathname);
+if(/^\/[A-Za-z]:\//.test(path))path=path.slice(1);
+folder.value=path.replaceAll('/','\\').replace(/\\$/,'');
+document.querySelector('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(folder.value);status.textContent='Copied / Copié';}catch{folder.select();status.textContent='Press Ctrl+C / Appuyez sur Ctrl+C';}};
+</script></html>

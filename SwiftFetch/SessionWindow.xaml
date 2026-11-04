@@ -1,0 +1,11 @@
+<Window x:Class="SwiftFetch.SessionWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Download login" Width="520" Height="480" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeBackground10141D}" Foreground="{DynamicResource ThemeForegroundEDF1F9}" FontFamily="Segoe UI">
+ <StackPanel Margin="24"><TextBlock Text="Download login" FontSize="22" FontWeight="SemiBold"/><TextBlock x:Name="OriginText" Foreground="#8794AD" Margin="0,8,0,16" TextTrimming="CharacterEllipsis"/>
+  <ComboBox x:Name="ModeBox" SelectedIndex="0"><ComboBoxItem Content="Keep browser session"/><ComboBoxItem Content="HTTP Basic (username and password)"/><ComboBoxItem Content="Bearer token"/><ComboBoxItem Content="Clear session / anonymous"/></ComboBox>
+  <TextBlock Text="Username (Basic only)" Margin="0,16,0,6" Foreground="#8794AD"/><TextBox x:Name="UsernameBox"/>
+  <TextBlock Text="Password or bearer token" Margin="0,12,0,6" Foreground="#8794AD"/><PasswordBox x:Name="SecretBox" Padding="10" Background="{DynamicResource ThemeBackground111620}" Foreground="{DynamicResource ThemeForegroundEDF1F9}" BorderBrush="{DynamicResource ThemeBorderBrush30384A}"/>
+  <TextBlock x:Name="CookieText" Foreground="#8794AD" Margin="0,14,0,0"/><TextBlock Text="Session data is protected for your Windows account." Foreground="#7886A0" Margin="0,6,0,0" FontSize="11"/>
+  <TextBlock x:Name="ErrorText" Foreground="#DB626B" Margin="0,10,0,0"/>
+  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0"><Button Content="Cancel" IsCancel="True"/><Button Content="Apply and retry" IsDefault="True" Click="Apply_Click"/></StackPanel>
+ </StackPanel>
+</Window>
+

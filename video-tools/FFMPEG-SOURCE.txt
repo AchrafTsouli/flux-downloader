@@ -1,0 +1,11 @@
+FFmpeg 8.1.2, LGPL-2.1-or-later, shared libraries; no GPL/nonfree components.
+Complete corresponding source: https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz
+Source SHA256: 464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c
+Build: scripts/Build-CompactFFmpeg.sh (SHA256: 275E849EC1702726265B82DC95695113E3A1D08EE7F4CBA4F86794F543DE0D27).
+Local source fix: mov_read_chnl returns ff_mov_read_chnl's status rather than an
+uninitialized variable; the one-line patch is applied by the build script.
+The shipped DLLs can be replaced/relinked with an ABI-compatible FFmpeg 8 build.
+Only packet-copy merging, containers, parsers, bitstream filters and networking
+used by Apex are included. Apex does not offer transcoding or video editing.
+Build-only toolchain: LLVM-MinGW 20261006 UCRT x64; MSYS2 2026-09-27 + GNU Make.
+Rebuild using scripts/Install-VideoTools.ps1. No compiler is needed by end users.

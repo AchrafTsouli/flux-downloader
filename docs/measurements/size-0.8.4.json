@@ -1,0 +1,27 @@
+{
+  "version": "0.8.4",
+  "units": "bytes (MB = 1,000,000 bytes)",
+  "stagedPayloadBytes": 93017168.0,
+  "installedBytes": 97433783.0,
+  "setupBytes": 78418503,
+  "previousSetupBytes": 206040480,
+  "videoToolsBytes": 24333099.0,
+  "developmentDistBytes": 60304907.0,
+  "setupSha256": "48F0EB360800CD64588FC2FB083B130D8A055567A6D75110C07AC00261451B3F",
+  "selfContained": true,
+  "hiddenRuntimeExtraction": false,
+  "supportedInterfaceLanguages": [
+    "en",
+    "fr"
+  ],
+  "checks": {
+    "core": 67,
+    "browserBridge": 10,
+    "media": 9,
+    "offlineMedia": 7,
+    "realYoutube": 3,
+    "installer": 9,
+    "wpfWindowAndQueueSmoke": "passed (foreground assertion skipped in isolated session)"
+  },
+  "timestamp": "2026-10-16T09:36:30.6078918Z"
+}

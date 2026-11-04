@@ -1,0 +1,30 @@
+Flux for Windows 10 22H2 / Windows 11, 64-bit
+
+The application, .NET runtime and video tools are included. Installation does not
+require a .NET SDK, a separate Node.js installation, or an administrator account.
+
+Chrome / Brave extension
+1. Open the "Set up the Chrome / Brave extension" shortcut in the Start menu.
+2. Open chrome://extensions or brave://extensions in your browser.
+3. Turn on Developer mode, choose Load unpacked, and select the BrowserExtension
+   folder inside the Flux installation folder. The guide can copy its full path.
+4. Refresh already-open video tabs after loading or updating the extension.
+
+The extension is not published in the Chrome Web Store. The installer configures
+the native bridge; it cannot silently install an unpacked extension into Chrome.
+
+To exit Flux completely, use Tasks > Exit or Exit from its tray menu.
+Close Flux this way before installing an update or uninstalling the application.
+Closing only its main window leaves it running in the system tray.
+
+Uninstall from Windows Settings > Apps > Installed apps. Your downloaded files,
+saved history and preferences are retained. Remove the browser extension manually
+if you no longer want it in Chrome / Brave.
+
+Installation / extension (français)
+Le logiciel et ses dépendances sont inclus. Aucun SDK .NET n'est nécessaire.
+Pour Chrome/Brave, activez le mode développeur sur la page des extensions, cliquez
+sur "Charger l'extension non empaquetée" et choisissez le dossier BrowserExtension.
+Le guide du menu Démarrer indique le chemin exact. Actualisez les onglets vidéo.
+Pour quitter Flux complètement : Tasks > Exit ou Quitter dans la zone de notification.
+La désinstallation conserve vos téléchargements, votre historique et vos réglages.

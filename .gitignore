@@ -1,0 +1,50 @@
+# Build output, caches and local tools
+**/bin/
+**/obj/
+.dotnet-home/
+.test-tmp/
+.tools/
+.vs/
+artifacts/
+dist/
+installers/
+Downloads/
+_compare/
+node_modules/
+__pycache__/
+*.user
+ui-preview.png
+
+# Bundled video tool binaries: published once as a release asset and restored with
+# scripts/Get-VideoTools.ps1, which checks every file against video-tools/sources.json.
+video-tools/*
+!video-tools/sources.json
+!video-tools/*LICENSE*.txt
+!video-tools/FFMPEG-*.txt
+
+# The release signing key never lives in the repository (see scripts/New-UpdateKey.ps1).
+*.key
+
+# Machine-specific validation reports and personal debugging helpers (kept locally only).
+docs/measurements/installer*-validation.json
+scripts/Activate-App.ps1
+scripts/Check-CrashLog.ps1
+scripts/Check-Mutex.ps1
+scripts/Check-ProcessThreads.ps1
+scripts/Check-Shortcut.ps1
+scripts/Check-WmiProcess.ps1
+scripts/Find-ProcessWindows.ps1
+scripts/Find-TitleWindow.ps1
+scripts/Get-ThreadStack.ps1
+scripts/Get-WindowInfo.ps1
+scripts/Inspect-Hwnd.ps1
+scripts/Inspect-Window.ps1
+scripts/Launch-App.ps1
+scripts/Show-Window.ps1
+scripts/Start-Apex.ps1
+scripts/Test-ApexExe.ps1
+scripts/Test-Run.ps1
+scripts/decrypt_history.*
+scripts/dump_*
+scripts/test_gofile_*.py
+scripts/test_mp4upload.py

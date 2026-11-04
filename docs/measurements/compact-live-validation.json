@@ -1,0 +1,35 @@
+[
+  {
+    "page": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "format": "603\u002B140",
+    "container": "mp4",
+    "pausedBytes": 22216,
+    "completedBytes": 498604,
+    "progressReports": 36,
+    "tools": "video-tools-compact",
+    "verifiedAudioAndVideo": true,
+    "timestamp": "2026-10-16T09:28:31.1115104\u002B00:00"
+  },
+  {
+    "page": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "format": "395\u002B140",
+    "container": "mp4",
+    "pausedBytes": 0,
+    "completedBytes": 533932,
+    "progressReports": 20,
+    "tools": "video-tools-compact",
+    "verifiedAudioAndVideo": true,
+    "timestamp": "2026-10-16T09:28:38.4768447\u002B00:00"
+  },
+  {
+    "page": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "format": "278\u002B251",
+    "container": "webm",
+    "pausedBytes": 0,
+    "completedBytes": 437579,
+    "progressReports": 19,
+    "tools": "video-tools-compact",
+    "verifiedAudioAndVideo": true,
+    "timestamp": "2026-10-16T09:28:45.1903917\u002B00:00"
+  }
+]

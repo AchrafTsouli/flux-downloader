@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>SwiftFetch</AssemblyName>
+    <Version>0.9.2</Version>
+    <Product>Flux</Product>
+    <AssemblyTitle>Flux</AssemblyTitle>
+    <Company>Flux</Company>
+    <StartupObject>SwiftFetch.Program</StartupObject>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="app-icon.png" />
+    <Resource Include="app.ico" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="../SwiftFetch.Core/SwiftFetch.Core.csproj" /><ProjectReference Include="../SwiftFetch.Bridge/SwiftFetch.Bridge.csproj" /></ItemGroup>
+</Project>

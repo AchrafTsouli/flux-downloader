@@ -1,0 +1,12 @@
+{
+  "version": "0.8.6",
+  "installedBytes": 97461066.0,
+  "setupBytes": 78419617,
+  "sha256": "496865242651D00E14922744F03B982AAB843F971F98401D3EA9B4E072C08AF0",
+  "independentWindowSmoke": "passed",
+  "initialRaisedOrdering": "passed",
+  "temporaryTopmostRelease": "passed",
+  "foregroundFocusAssertion": "skipped: isolated Windows session did not grant foreground rights",
+  "installerChecks": 9,
+  "timestamp": "2026-10-16T14:02:45.6918274Z"
+}

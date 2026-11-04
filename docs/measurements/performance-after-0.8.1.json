@@ -1,0 +1,21 @@
+{
+  "rows": 1000,
+  "visible": {
+    "mode": "visible-idle",
+    "seconds": 8.00239,
+    "allocatedMB": 0.00782012939453125,
+    "cpuMs": 140.625,
+    "privateMB": 98.5625,
+    "workingSetMB": 171.91015625,
+    "managedMB": 18.064910888671875
+  },
+  "hidden": {
+    "mode": "hidden-idle",
+    "seconds": 8.0075572,
+    "allocatedMB": 0.00782012939453125,
+    "cpuMs": 46.875,
+    "privateMB": 98.22265625,
+    "workingSetMB": 171.76171875,
+    "managedMB": 18.080596923828125
+  }
+}

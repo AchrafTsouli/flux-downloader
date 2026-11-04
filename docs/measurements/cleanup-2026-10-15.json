@@ -1,0 +1,82 @@
+[
+  {
+    "path": ".test-tmp",
+    "removedBytes": 1240640,
+    "status": "removed"
+  },
+  {
+    "path": ".dotnet-home",
+    "removedBytes": 378190611,
+    "status": "removed"
+  },
+  {
+    "path": ".tools\\downloads",
+    "removedBytes": 10592232,
+    "status": "removed"
+  },
+  {
+    "path": "artifacts",
+    "removedBytes": 0,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch\\bin",
+    "removedBytes": 184197018,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch\\obj",
+    "removedBytes": 1987512,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Bridge\\bin",
+    "removedBytes": 222436,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Bridge\\obj",
+    "removedBytes": 151411,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.BridgeTests\\bin",
+    "removedBytes": 34749407,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.BridgeTests\\obj",
+    "removedBytes": 347225,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Core\\bin",
+    "removedBytes": 198980,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.Core\\obj",
+    "removedBytes": 378786,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.NativeHost\\bin",
+    "removedBytes": 117798501,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.NativeHost\\obj",
+    "removedBytes": 573408,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.UiSmoke\\bin",
+    "removedBytes": 35359912,
+    "status": "removed"
+  },
+  {
+    "path": "SwiftFetch.UiSmoke\\obj",
+    "removedBytes": 471857,
+    "status": "removed"
+  }
+]

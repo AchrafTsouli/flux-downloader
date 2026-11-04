@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Flux</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 32 32">
+      <rect x="1" y="1" width="30" height="30" rx="6" fill="#161B22" stroke="#2A3746" stroke-width="1.2"/>
+      <rect x="4.5" y="7" width="23" height="2" rx="1" fill="#3EC28F"/>
+      <rect x="4.5" y="12.5" width="23" height="2" rx="1" fill="#3EC28F"/>
+      <rect x="4.5" y="18" width="23" height="2" rx="1" fill="#3EC28F"/>
+      <rect x="4.5" y="23.5" width="23" height="2" rx="1" fill="#3EC28F"/>
+      <path d="M18 3.5 L10 15 L15 15 L11 28.5 L22 13.5 L17 13.5 Z" fill="#55FFB2" stroke="#12161C" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>
+    <h1>Flux</h1>
+  </div>
+  <p>Direct file links open straight in Flux.</p>
+  <label class="toggle"><input id="capture" type="checkbox"> Capture browser downloads</label>
+  <label class="toggle"><input id="videos" type="checkbox"> Show “Download this video” panels</label>
+  <div class="actions"><button id="open">Open Flux</button><button id="test" class="secondary">Test connection</button></div>
+  <div class="actions"><button id="refresh-videos" class="secondary">Refresh video panels on this tab</button></div>
+  <p id="status" role="status">Checking connection…</p>
+  <p class="hint" id="version"></p>
+  <p class="hint">Right-click a file link and choose “Download with Flux”. Browser cookies are sent only for the download URL.</p>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

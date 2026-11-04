@@ -1,0 +1,4 @@
+# Store files exactly as written (Windows scripts keep CRLF, the FFmpeg build script keeps LF).
+* -text
+*.png binary
+*.ico binary

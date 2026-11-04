@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-10-16T14:02:49.6306640Z",
+  "removedBytes": 815620073.0,
+  "targets": [
+    {
+      "path": ".dotnet-home",
+      "removedBytes": 383531361
+    },
+    {
+      "path": ".test-tmp",
+      "removedBytes": 436997
+    },
+    {
+      "path": "artifacts",
+      "removedBytes": 93017954
+    },
+    {
+      "path": "installers/ApexDownloader-Setup-0.8.5-win-x64.exe",
+      "removedBytes": 78419366
+    },
+    {
+      "path": "installers/ApexDownloader-Setup-0.8.5-win-x64.exe.sha256",
+      "removedBytes": 106
+    },
+    {
+      "path": "SwiftFetch/bin",
+      "removedBytes": 176191126
+    },
+    {
+      "path": "SwiftFetch/obj",
+      "removedBytes": 11977481
+    },
+    {
+      "path": "SwiftFetch.Core/bin",
+      "removedBytes": 252244
+    },
+    {
+      "path": "SwiftFetch.Core/obj",
+      "removedBytes": 428738
+    },
+    {
+      "path": "SwiftFetch.Bridge/bin",
+      "removedBytes": 294624
+    },
+    {
+      "path": "SwiftFetch.Bridge/obj",
+      "removedBytes": 166089
+    },
+    {
+      "path": "SwiftFetch.NativeHost/bin",
+      "removedBytes": 34734652
+    },
+    {
+      "path": "SwiftFetch.NativeHost/obj",
+      "removedBytes": 323787
+    },
+    {
+      "path": "SwiftFetch.UiSmoke/bin",
+      "removedBytes": 35373052
+    },
+    {
+      "path": "SwiftFetch.UiSmoke/obj",
+      "removedBytes": 472496
+    }
+  ]
+}

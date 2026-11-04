@@ -1,0 +1,60 @@
+{
+  "quickjs": {
+    "version": "0.17.0",
+    "sha256": "2aeabf0092c3262d6b2609824418f7dd7ed1f1df939f73b2b15645230cac0d77",
+    "url": "https://github.com/quickjs-ng/quickjs/releases/download/v0.17.0/qjs-windows-x86_64.exe"
+  },
+  "ffmpeg": {
+    "version": "8.1.2",
+    "url": "https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz",
+    "sourceSha256": "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c",
+    "configurationSha256": "275E849EC1702726265B82DC95695113E3A1D08EE7F4CBA4F86794F543DE0D27"
+  },
+  "ytDlp": {
+    "version": "2026.08.19",
+    "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a",
+    "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.exe"
+  },
+  "files": [
+    {
+      "name": "avcodec-62.dll",
+      "bytes": 2187776,
+      "sha256": "f988a2247b97ea08419cc97f7d80e12c367c93a42f2efa29da443e751ecd639c"
+    },
+    {
+      "name": "avfilter-11.dll",
+      "bytes": 154112,
+      "sha256": "c63113649b9bebbf08b14ef44a7f59074cf1dd7d2b1950696989479cbd5b552f"
+    },
+    {
+      "name": "avformat-62.dll",
+      "bytes": 886272,
+      "sha256": "869134686ed67d2d390210a598e14e556188f097735ed2603926d5918cb6fd7f"
+    },
+    {
+      "name": "avutil-60.dll",
+      "bytes": 518144,
+      "sha256": "946970e54f1ea60e9e38ad66f6df092176eeab71a7a18c022935e2ddbaea1c2d"
+    },
+    {
+      "name": "ffmpeg.exe",
+      "bytes": 389120,
+      "sha256": "a5f670d71be8112a23e209b62a63c6931f8730d1080e1f45fcd4ee850a45b939"
+    },
+    {
+      "name": "ffprobe.exe",
+      "bytes": 172544,
+      "sha256": "b8097ddaa36320c42aa4f556a51d43e4b695a97573ebcaaafbc990c07a2783af"
+    },
+    {
+      "name": "qjs.exe",
+      "bytes": 2151363,
+      "sha256": "2aeabf0092c3262d6b2609824418f7dd7ed1f1df939f73b2b15645230cac0d77"
+    },
+    {
+      "name": "yt-dlp.exe",
+      "bytes": 17840399,
+      "sha256": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a"
+    }
+  ]
+}

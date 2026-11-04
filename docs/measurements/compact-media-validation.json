@@ -1,0 +1,64 @@
+[
+  {
+    "case": "h264-aac.mp4",
+    "codecs": [
+      "h264",
+      "aac"
+    ],
+    "bytes": 43686,
+    "videoPacketsUnchanged": true
+  },
+  {
+    "case": "vp9-opus.webm",
+    "codecs": [
+      "vp9",
+      "opus"
+    ],
+    "bytes": 41461,
+    "videoPacketsUnchanged": true
+  },
+  {
+    "case": "vp9-aac.mp4",
+    "codecs": [
+      "vp9",
+      "aac"
+    ],
+    "bytes": 38861,
+    "videoPacketsUnchanged": true
+  },
+  {
+    "case": "av1-aac.mp4",
+    "codecs": [
+      "av1",
+      "aac"
+    ],
+    "bytes": 34133,
+    "videoPacketsUnchanged": true
+  },
+  {
+    "case": "av1-opus.mkv",
+    "codecs": [
+      "av1",
+      "opus"
+    ],
+    "bytes": 36929,
+    "videoPacketsUnchanged": true
+  },
+  {
+    "case": "h264-adts.mp4",
+    "codecs": [
+      "h264",
+      "aac"
+    ],
+    "bytes": 43655,
+    "videoPacketsUnchanged": true
+  },
+  {
+    "case": "mpeg-ts-hls-style-remux",
+    "streams": [
+      "video",
+      "audio"
+    ],
+    "bytes": 43825
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "version": "0.8.5",
+  "installedBytes": 97460935.0,
+  "setupBytes": 78419366,
+  "sha256": "C99B03A27906AEE74F83FB41FCF5A493B9AD537E967260113ECDC2D4C8E7B4C4",
+  "coreChecks": 69,
+  "downloadRowRateChecks": "passed",
+  "trayAndQueueSmoke": "passed",
+  "installerChecks": 9,
+  "installedApplicationIcon": "passed",
+  "timestamp": "2026-10-16T11:11:28.8584155Z"
+}

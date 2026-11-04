@@ -1,0 +1,89 @@
+<Window x:Class="SwiftFetch.DownloadCompleteDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Download complete"
+        Width="560" SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource ThemeBackground1E1E1E}"
+        Foreground="{DynamicResource ThemeForegroundD0D0D0}"
+        FontFamily="Segoe UI"
+        ShowInTaskbar="True">
+    <Window.Resources>
+        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Padding" Value="8,2"/><Setter Property="MinHeight" Value="26"/><Setter Property="FontSize" Value="11.5"/></Style>
+        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}"><Setter Property="Padding" Value="5,2"/><Setter Property="MinHeight" Value="26"/><Setter Property="FontSize" Value="11.5"/></Style>
+        <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}"><Setter Property="Margin" Value="0,4,0,4"/></Style>
+    </Window.Resources>
+    <Grid Margin="16,14,16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Header: Yellow folder/envelope icon + Download Complete texts -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <!-- Iconic Yellow Folder Document Icon -->
+            <Viewbox Width="36" Height="36" Margin="0,0,14,0" VerticalAlignment="Center">
+                <Canvas Width="36" Height="36">
+                    <!-- Yellow Folder Body -->
+                    <Path Data="M3,8 L13,8 L16,11 L33,11 C34,11 35,12 35,13 L35,29 C35,30 34,31 33,31 L3,31 C2,31 1,30 1,29 L1,10 C1,9 2,8 3,8 Z"
+                          Fill="#E5A93B" Stroke="#B57F20" StrokeThickness="1"/>
+                    <!-- White Paper Sheet Sticking Out -->
+                    <Path Data="M10,4 L26,4 L26,18 L10,18 Z"
+                          Fill="#FFFFFF" Stroke="#C0C0C0" StrokeThickness="0.8"/>
+                    <!-- Folder Front Flap -->
+                    <Path Data="M1,14 L35,14 L32,31 L1,31 Z"
+                          Fill="#F5C04A" Stroke="#C88E20" StrokeThickness="0.8"/>
+                </Canvas>
+            </Viewbox>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Download complete" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource ThemeForegroundFFFFFF}"/>
+                <TextBlock x:Name="DownloadedSizeBlock" Text="Downloaded 0 MB (0 Bytes)" Foreground="{DynamicResource ThemeForegroundC8C8C8}" FontSize="12" Margin="0,2,0,0"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Address field -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,8">
+            <TextBlock Text="Address" Foreground="{DynamicResource ThemeForegroundA0A0A0}" FontSize="11" Margin="0,0,0,3"/>
+            <TextBox x:Name="AddressBox" IsReadOnly="True" Height="28"
+                     Background="{DynamicResource ThemeBackground141414}" Foreground="{DynamicResource ThemeForegroundE0E0E0}" BorderBrush="{DynamicResource ThemeBorderBrush383838}"/>
+        </StackPanel>
+
+        <!-- The file saved as field -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,14">
+            <TextBlock Text="The file saved as" Foreground="{DynamicResource ThemeForegroundA0A0A0}" FontSize="11" Margin="0,0,0,3"/>
+            <TextBox x:Name="SavedAsBox" IsReadOnly="True" Height="28"
+                     Background="{DynamicResource ThemeBackground141414}" Foreground="{DynamicResource ThemeForegroundE0E0E0}" BorderBrush="{DynamicResource ThemeBorderBrush383838}"/>
+        </StackPanel>
+
+        <!-- Action buttons row: Open / Open with... / Open folder / Close -->
+        <DockPanel Grid.Row="3" Margin="0,0,0,10" LastChildFill="False">
+            <Button Content="Open" Width="85" Height="30" Margin="0,0,6,0"
+                    IsDefault="True" Click="Open_Click" Background="{DynamicResource ThemeBackground2A2A2A}" BorderBrush="{DynamicResource ThemeBorderBrush444444}"/>
+            <Button Content="Open with..." Width="95" Height="30" Margin="0,0,6,0"
+                    Click="OpenWith_Click" Background="{DynamicResource ThemeBackground2A2A2A}" BorderBrush="{DynamicResource ThemeBorderBrush444444}"/>
+            <Button Content="Open folder" Width="95" Height="30"
+                    Click="OpenFolder_Click" Background="{DynamicResource ThemeBackground2A2A2A}" BorderBrush="{DynamicResource ThemeBorderBrush444444}"/>
+            <Button Content="Close" Width="80" Height="30" DockPanel.Dock="Right"
+                    IsCancel="True" Click="Close_Click" Background="{DynamicResource ThemeBackground2A2A2A}" BorderBrush="{DynamicResource ThemeBorderBrush444444}"/>
+        </DockPanel>
+
+        <!-- Footer: Don't show this dialog again & Hand icon -->
+        <DockPanel Grid.Row="4" Margin="0,4,0,2" VerticalAlignment="Center" LastChildFill="False">
+            <CheckBox x:Name="DontShowAgainCheck" Content="Don't show this dialog again"
+                      Foreground="{DynamicResource ThemeForeground888888}" FontSize="11" VerticalAlignment="Center"/>
+            <Viewbox DockPanel.Dock="Right" Width="20" Height="20" Opacity="0.8">
+                <!-- Pointer/Hand icon -->
+                <Canvas Width="24" Height="28">
+                    <Path Data="M10,2 C10,1 11,0 12,0 C13,0 14,1 14,2 L14,10 L15,10 C16,10 17,11 17,12 L17,14 L19,14 C20,14 21,15 21,16 L21,18 C21,21 18,24 15,24 L10,24 C7,24 5,22 5,19 L5,14 C5,13 6,12 7,12 L10,12 Z"
+                          Fill="#E09530"/>
+                </Canvas>
+            </Viewbox>
+        </DockPanel>
+    </Grid>
+</Window>
+
+
